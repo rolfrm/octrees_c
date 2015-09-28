@@ -3,8 +3,7 @@
 #include "vec3i.h"
 
 int oct_index(oct_node * oc){
-  if(!oct_has_super(oc))
-    return 0;
+  ASSERT(oct_has_super(oc));
   oct_node * super = oct_get_super(oc);
   for(int i = 0; i < 8; i++)
     if(oct_has_sub(super, i) && oct_get_sub(super, i) == oc)
@@ -13,19 +12,18 @@ int oct_index(oct_node * oc){
   return -1;
 }
 
-int vec3i_to_index(vec3i v){
+static int vec3i_to_index(vec3i v){
   return v.x + v.y * 2 + v.z * 4;
 }
 
-vec3i vec3i_from_index(int idx){
+static vec3i vec3i_from_index(int idx){
   ASSERT(idx >= 0 && idx < 8);
   return vec3i_make(idx & 1, (idx / 2) & 1, (idx / 4) & 1);
 }
 
-vec3i vec3i_half(vec3i v){
+static vec3i vec3i_half(vec3i v){
   return vec3i_make(v.x >> 1, v.y >> 1, v.z >> 1);
 }
-
 
 oct_node * oct_get_relative(oct_node * oc, vec3i v){
   if(v.x == 0 && v.y == 0 && v.z == 0)
@@ -52,21 +50,21 @@ void oct_render_node(oct_node * oc, float size, vec3 offset,
   }
 }
 
-vec3 to_super_coords (int idx, vec3 coords){
+static vec3 to_super_coords (int idx, vec3 coords){
   vec3 offset = vec3i_to_vec3(vec3i_from_index(idx));
   return vec3_scale(vec3_add(coords, offset), 0.5);
 }
 
-vec3 to_super_size(vec3 size){
+static vec3 to_super_size(vec3 size){
   return vec3_scale(size, 0.5);
 }
 
-vec3 to_sub_coords(int idx, vec3 coords){
+static vec3 to_sub_coords(int idx, vec3 coords){
   vec3 offset = vec3i_to_vec3(vec3i_from_index(idx));
   return vec3_sub(vec3_scale(coords, 2), offset);
 }
 
-vec3 to_sub_size(vec3 size){
+static vec3 to_sub_size(vec3 size){
   return vec3_scale(size, 2.0);
 }
 
@@ -101,7 +99,7 @@ float oct_get_super_size(oct_node * node, oct_node * super){
   return f;
 }
 
-void lookup_blocks(oct_node * node, vec3 position, vec3 size, 
+static void lookup_blocks(oct_node * node, vec3 position, vec3 size, 
 		   void (* cb)(oct_node * node, vec3 pos, vec3 size), 
 		   int idx){
   vec3 end = vec3_add(position, size);

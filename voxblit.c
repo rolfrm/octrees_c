@@ -4,6 +4,10 @@
 #include "octree.h"
 
 #include <signal.h>
+#define STB_IMAGE_IMPLEMENTATION
+//#define STBI_ONLY_PNG
+#include "stb/stb_image.h"
+
 
 void _error(const char * file, int line, const char * str, ...){
   loge("** ERROR at %s:%i **\n",file,line);
@@ -61,7 +65,9 @@ int main(){
   void collision_node(oct_node * oc, vec3 pos, vec3 size){
     logd("Collision with: %p %p", oc, ht_lookup(ht, &oc));vec3_print(pos);vec3_print(size);logd("\n");
   }
-  oct_lookup_blocks(n1, vec3mk(0.0, 0.0, 0.0), vec3mk(2.0,2.0,2.0), collision_node);
-
+  oct_lookup_blocks(n1, vec3mk(0.0, 0.0, 0.0), vec3mk(2.0,2.0,1.0), collision_node);
+  int w,h,c;
+  stbi_load("../racket_octree/tile2.png", &w, &h, &c,4);
+  logd("%i %i %i\n", w, h, c);
   return 0;
 }
