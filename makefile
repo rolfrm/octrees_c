@@ -1,5 +1,5 @@
 OPT = -g
-SOURCES =  voxblit.c ../iron/linmath.c ../iron/utils.c ../iron/mem.c ../iron/fileio.c ../iron/array.c ../iron/math.c ../iron/time.c ../iron/hashtable.c ../iron/log.c 
+SOURCES =  voxblit.c ../iron/linmath.c ../iron/utils.c ../iron/mem.c ../iron/fileio.c ../iron/array.c ../iron/math.c ../iron/time.c ../iron/hashtable.c ../iron/log.c oct_node.c vec3i.c octree.c
 CC = gcc
 TARGET = run
 OBJECTS =$(SOURCES:.c=.o)
