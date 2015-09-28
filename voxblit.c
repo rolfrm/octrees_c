@@ -41,22 +41,27 @@ int main(){
     }
   }
 
-  oct_node * render_ode = n16;
-  void rnd(oct_node * oc, float s, vec3 o){
-    
+  oct_node * render_node = n16;
+  vec3 offset = oct_get_super_offset(n1, render_node);
+  float super_size = oct_get_super_size(n1, render_node);
+  
+  void rnd(oct_node * oc, float s, vec3 o){  
     size_t * x1 = ht_lookup(ht, &oc);
     if(x1 != NULL){
-      logd("%p %f %4i ", oc, s, (x1 != NULL ? *x1 : 0)); 
-      vec3_print(o); 
+      logd("%p %f %4i ", oc, s * super_size, (x1 != NULL ? *x1 : 0)); 
+      vec3_print(vec3_scale(o, super_size)); 
       logd("\n");
     }
   }
   
-  oct_render_node(n16, 1.0, vec3mk(0.0, 0.0, 0.0), rnd);
-  
-  vec3 offset = oct_get_super_offset(n1, n15);
-  float super_size = oct_get_super_size(n1, n15);
+  oct_render_node(render_node, 1.0, vec3mk(0.0, 0.0, 0.0), rnd);
+
   vec3_print(offset);logd(" %f ", super_size);logd("\n");
+
+  void collision_node(oct_node * oc, vec3 pos, vec3 size){
+    logd("Collision with: %p %p", oc, ht_lookup(ht, &oc));vec3_print(pos);vec3_print(size);logd("\n");
+  }
+  oct_lookup_blocks(n1, vec3mk(0.0, 0.0, 0.0), vec3mk(2.0,2.0,2.0), collision_node);
 
   return 0;
 }

@@ -100,3 +100,31 @@ float oct_get_super_size(oct_node * node, oct_node * super){
   }
   return f;
 }
+
+void lookup_blocks(oct_node * node, vec3 position, vec3 size, 
+		   void (* cb)(oct_node * node, vec3 pos, vec3 size), 
+		   int idx){
+  vec3 end = vec3_add(position, size);
+  bool collision = 
+    end.x > 0 && end.y > 0 && end.z > 0 
+    && position.x < 1 && position.y < 1 && position.z < 1;
+  if(collision){
+    cb(node, position, size);
+    for(int i = 0; i < 8; i++){
+      if(i == idx) continue;
+      if(!oct_has_sub(node, i)) continue;
+      lookup_blocks(oct_get_sub(node, i), 
+		    to_sub_coords(i, position), to_sub_size(size), cb, -2);
+    }
+  }
+  if(idx == -2 || !oct_has_super(node)) return;
+  int idx2 = oct_index(node);
+  lookup_blocks(oct_get_super(node), 
+		to_super_coords(idx2, position), to_super_size(size), cb, idx2);
+}
+
+void oct_lookup_blocks(oct_node * node, vec3 position, vec3 size, 
+		       void (* cb)(oct_node * node, vec3 pos, vec3 size)){
+  lookup_blocks(node, position, size, cb, -1);
+
+}

@@ -4,3 +4,5 @@ void oct_render_node(oct_node * oc, float size, vec3 offset,
 int oct_index(oct_node * oc);
 vec3 oct_get_super_offset(oct_node * node, oct_node * super);
 float oct_get_super_size(oct_node * node, oct_node * super);
+void oct_lookup_blocks(oct_node * node, vec3 position, vec3 size, 
+		       void (* cb)(oct_node * node, vec3 pos, vec3 size));
