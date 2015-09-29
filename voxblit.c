@@ -4,9 +4,13 @@
 #include "octree.h"
 
 #include <signal.h>
-#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
 //#define STBI_ONLY_PNG
-#include "stb/stb_image.h"
+//#include "stb/stb_image.h"
+#include "event.h"
+typedef struct _game_state game_state;
+#include "renderer.h"
+
 
 
 void _error(const char * file, int line, const char * str, ...){
@@ -16,6 +20,7 @@ void _error(const char * file, int line, const char * str, ...){
   logd("** **\n");
   raise(SIGINT);
 }
+
 
 int main(){
   oct_node * n1 = oct_create();
@@ -66,8 +71,20 @@ int main(){
     logd("Collision with: %p %p", oc, ht_lookup(ht, &oc));vec3_print(pos);vec3_print(size);logd("\n");
   }
   oct_lookup_blocks(n1, vec3mk(0.0, 0.0, 0.0), vec3mk(2.0,2.0,1.0), collision_node);
-  int w,h,c;
-  stbi_load("../racket_octree/tile2.png", &w, &h, &c,4);
-  logd("%i %i %i\n", w, h, c);
+  //int w,h,c;
+  //char * im_data = (char *) stbi_load("../racket_octree/tile2.png", &w, &h, &c,4);
+  
+  game_renderer * rnd2 = renderer_load(300, 300);
+  //logd("%i %i %i %i\n",im_data, w, h, c);
+  while(true){
+    renderer_render(rnd2, NULL);
+    event evt[32];
+    u32 event_cnt = renderer_read_events(evt, array_count(evt));
+    for(u32 i = 0; i < event_cnt; i++)
+      if(evt[i].type == QUIT)
+	return 0;
+    logd("Events: %i\n", event_cnt);
+  }
+  
   return 0;
 }
