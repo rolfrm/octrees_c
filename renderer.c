@@ -1,7 +1,4 @@
-typedef struct _game_state{
-  int i;
 
-}game_state;
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -9,7 +6,7 @@ typedef struct _game_state{
 #include <iron/mem.h>
 
 #include "event.h"
-#include "renderer.h"
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
@@ -17,12 +14,29 @@ typedef struct _game_state{
 #include <GL/gl.h>
 #include "sdl_event.h"
 #include <iron/log.h>
+#include <iron/utils.h>
+#include <iron/linmath.h>
+#include "oct_node.h"
+#include "vec3i.h"
+#include "octree.h"
+#include "game_state.h"
+
+#include "renderer.h"
+
+static vec2 iso_offset(vec3 v){
+  return vec2mk(v.x + v.z, v.z / 2 - v.y - v.x / 2);
+}
 
 struct _game_renderer{
   SDL_Window * window;
   SDL_Renderer * renderer;
 };
-bool sdl_inited = false;
+
+struct _texture_asset{
+  SDL_Texture * texture;
+};
+
+static bool sdl_inited = false;
 game_renderer * renderer_load(int width, int height){
   if(!sdl_inited){
     SDL_Init(SDL_INIT_VIDEO);
@@ -36,12 +50,35 @@ game_renderer * renderer_load(int width, int height){
 }
 
 void renderer_render(game_renderer * rnd, game_state * state){
-  SDL_SetRenderDrawColor(rnd->renderer, 255, 255, 255, 255);
+  SDL_SetRenderTarget(rnd->renderer, NULL);
+  SDL_SetRenderDrawColor(rnd->renderer, 0, 255, 255, 255);
   SDL_RenderClear(rnd->renderer);
+
+  oct_node * start_node = oct_get_nth_super(state->center_node, 5);
+  vec3 offset = oct_get_super_offset(state->center_node, start_node);
+  float size = oct_get_super_size(state->center_node, start_node);
+  float base_size = 48.0;
+  void render_fcn(oct_node * n, float s, vec3 offset)
+  {
+
+    SDL_Texture * payload = oct_get_payload(n);
+    if(payload == NULL) return;
+    vec2 point = iso_offset(offset);
+    //logd("Render: %f %f", s, size);vec2_print(point);vec3_print(offset);logd("\n");
+    SDL_Rect rec;
+    rec.x = point.x / 2;
+    rec.y = point.y / 2;
+    rec.w = s; 
+    rec.h = s;
+    SDL_SetTextureBlendMode(payload, SDL_BLENDMODE_BLEND);
+    SDL_RenderCopy(rnd->renderer, payload, NULL, &rec);
+  }
+
+  oct_render_node(start_node, size * base_size, vec3_scale(offset, base_size), render_fcn);
+  
   ellipseColor(rnd->renderer,10,10,10,10,0xFF00FFFF);
-  SDL_RenderPresent(rnd->renderer);
-  if(state != NULL)
-    logd("%i\n", state->i);
+
+  SDL_RenderPresent(rnd->renderer);  
 }
 
 u32 renderer_read_events(event * buffer, u32 buffer_size){
@@ -57,3 +94,29 @@ u32 renderer_read_events(event * buffer, u32 buffer_size){
   return buffer_size;
 }
 
+static int get_pixel_format(int channels){
+  switch(channels){
+  case 3:
+    return SDL_PIXELFORMAT_RGB24;
+  case 4:
+    return SDL_PIXELFORMAT_ABGR8888;
+  case 1:
+    return SDL_PIXELFORMAT_INDEX8;
+  }
+  UNREACHABLE();
+  return 0;
+}
+
+#include "image.h"
+texture_asset * renderer_load_texture(game_renderer * rnd, const char * path){
+  int w,h,c;
+  char * im_data = stbi_load((char *)path, &w, &h, &c,4);
+  SDL_Texture * tex = SDL_CreateTexture(rnd->renderer, get_pixel_format(c), 
+					SDL_TEXTUREACCESS_STATIC, w, h);
+  SDL_UpdateTexture(tex, NULL, im_data, w * c);
+  return (texture_asset *) tex;
+}
+
+void renderer_delete_asset(texture_asset * asset){
+  UNUSED(asset);
+}

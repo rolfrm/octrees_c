@@ -126,3 +126,9 @@ void oct_lookup_blocks(oct_node * node, vec3 position, vec3 size,
   lookup_blocks(node, position, size, cb, -1);
 
 }
+
+oct_node * oct_get_nth_super(oct_node * node, int n){
+  for(;n > 0; n -= 1)
+    node = oct_get_super(node);
+  return node;
+}

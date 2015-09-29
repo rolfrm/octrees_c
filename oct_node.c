@@ -8,6 +8,7 @@ typedef struct _oct_node oct_node;
 struct _oct_node{
   oct_node * super;
   oct_node * sub[8];
+  void * payload;
 };
 
 oct_node * oct_get_sub(oct_node * oc, int idx){
@@ -50,4 +51,12 @@ void oct_delete(oct_node * oc){
       oc->sub[i] = NULL;
     }
   dealloc(oc);
+}
+
+void * oct_get_payload(oct_node * node){
+  return node->payload;
+}
+
+void oct_set_payload(oct_node * node, void * payload){
+  node->payload = payload;
 }

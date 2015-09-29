@@ -4,13 +4,10 @@
 #include "octree.h"
 
 #include <signal.h>
-//#define STB_IMAGE_IMPLEMENTATION
-//#define STBI_ONLY_PNG
-//#include "stb/stb_image.h"
 #include "event.h"
-typedef struct _game_state game_state;
+#include "game_state.h"
 #include "renderer.h"
-
+#include "image.h"
 
 
 void _error(const char * file, int line, const char * str, ...){
@@ -71,19 +68,33 @@ int main(){
     logd("Collision with: %p %p", oc, ht_lookup(ht, &oc));vec3_print(pos);vec3_print(size);logd("\n");
   }
   oct_lookup_blocks(n1, vec3mk(0.0, 0.0, 0.0), vec3mk(2.0,2.0,1.0), collision_node);
-  //int w,h,c;
-  //char * im_data = (char *) stbi_load("../racket_octree/tile2.png", &w, &h, &c,4);
-  
+
   game_renderer * rnd2 = renderer_load(300, 300);
-  //logd("%i %i %i %i\n",im_data, w, h, c);
+  game_state state = { n1 };
+  oct_set_payload(n1, renderer_load_texture(rnd2, "../racket_octree/tile22.png"));
+  oct_set_payload(oct_get_relative(n1, vec3i_make(0,0,1)), oct_get_payload(n1));
+  oct_set_payload(oct_get_relative(n1, vec3i_make(0,-1,0)), oct_get_payload(n1));
+  oct_set_payload(oct_get_relative(n1, vec3i_make(0,-2,0)), oct_get_payload(n1));
+  for(int i = 0; i < 4; i++)
+    oct_set_payload(oct_get_relative(n1, vec3i_make(0,-2, 1 + i)), oct_get_payload(n1));
+  for(int i = 0; i < 4; i++)
+    oct_set_payload(oct_get_relative(n1, vec3i_make(i, 0, 1)), oct_get_payload(n1));
+  for(int i = 0; i < 10; i++)
+    oct_set_payload(oct_get_relative(n1, vec3i_make(3, 0, i)), oct_get_payload(n1));
   while(true){
-    renderer_render(rnd2, NULL);
+    renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     for(u32 i = 0; i < event_cnt; i++)
-      if(evt[i].type == QUIT)
+      switch(evt[i].type){
+      case QUIT:
 	return 0;
-    logd("Events: %i\n", event_cnt);
+      case KEY:
+	logd("%c\n", keysym_descr_from_keysym(evt[i].key.sym).charcode);
+	break;
+      default:
+	continue;
+      }
   }
   
   return 0;
