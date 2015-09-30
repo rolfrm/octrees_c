@@ -9,7 +9,6 @@
 #include "renderer.h"
 #include "image.h"
 
-
 void _error(const char * file, int line, const char * str, ...){
   loge("** ERROR at %s:%i **\n",file,line);
   loge("%s", str);
@@ -17,7 +16,6 @@ void _error(const char * file, int line, const char * str, ...){
   logd("** **\n");
   raise(SIGINT);
 }
-
 
 int main(){
   oct_node * n1 = oct_create();
@@ -69,18 +67,23 @@ int main(){
   }
   oct_lookup_blocks(n1, vec3mk(0.0, 0.0, 0.0), vec3mk(2.0,2.0,1.0), collision_node);
 
-  game_renderer * rnd2 = renderer_load(300, 300);
+  game_renderer * rnd2 = renderer_load(600, 600);
   game_state state = { n1 };
-  oct_set_payload(n1, renderer_load_texture(rnd2, "../racket_octree/tile22.png"));
-  oct_set_payload(oct_get_relative(n1, vec3i_make(0,0,1)), oct_get_payload(n1));
-  oct_set_payload(oct_get_relative(n1, vec3i_make(0,-1,0)), oct_get_payload(n1));
-  oct_set_payload(oct_get_relative(n1, vec3i_make(0,-2,0)), oct_get_payload(n1));
+  texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile22.png");
+  texture_asset * tile3 = renderer_load_texture(rnd2, "../racket_octree/tile2x2.png");
+  texture_asset_set_offset(tile22, vec2mk(0, -41));
+  texture_asset_set_offset(tile3, vec2mk(0, - 77));
+  oct_set_payload(n1, tile22);
+  oct_set_payload(oct_get_relative(n1, vec3i_make(0,0,1)), tile22);
+  oct_set_payload(oct_get_relative(n1, vec3i_make(0,-1,0)), tile22);
+  oct_set_payload(oct_get_relative(n1, vec3i_make(4,-4,4)), tile22);
+  oct_set_payload(oct_get_super(oct_get_relative(n1, vec3i_make(4,-6,4))), tile3);
   for(int i = 0; i < 4; i++)
-    oct_set_payload(oct_get_relative(n1, vec3i_make(0,-2, 1 + i)), oct_get_payload(n1));
+    oct_set_payload(oct_get_relative(n1, vec3i_make(0,-2, 1 + i)), tile22);
   for(int i = 0; i < 4; i++)
-    oct_set_payload(oct_get_relative(n1, vec3i_make(i, 0, 1)), oct_get_payload(n1));
+    oct_set_payload(oct_get_relative(n1, vec3i_make(i, 0, 1)), tile22);
   for(int i = 0; i < 10; i++)
-    oct_set_payload(oct_get_relative(n1, vec3i_make(3, 0, i)), oct_get_payload(n1));
+    oct_set_payload(oct_get_relative(n1, vec3i_make(3, 0, i)), tile22);
   while(true){
     renderer_render(rnd2, &state);
     event evt[32];

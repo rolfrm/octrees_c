@@ -41,11 +41,12 @@ void oct_render_node(oct_node * oc, float size, vec3 offset,
   f(oc, size, offset);
   int idxes[] = {1, 0, 5, 4, 3, 2, 7, 6};
   ASSERT(array_count(idxes) == 8);
+  float size2 = size * 0.5;
   for(size_t i = 0; i < array_count(idxes); i++){
     int idx = idxes[i];
     if(oct_has_sub(oc, idx)){
       vec3 off = vec3i_to_vec3(vec3i_from_index(idx));
-      oct_render_node(oct_get_sub(oc, idx), size * 0.5, vec3_add(offset, vec3_scale(off, size * 0.5)), f);
+      oct_render_node(oct_get_sub(oc, idx), size2, vec3_add(offset, vec3_scale(off, size2)), f);
     }
   }
 }

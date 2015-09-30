@@ -34,6 +34,7 @@ struct _game_renderer{
 
 struct _texture_asset{
   SDL_Texture * texture;
+  vec2 offset;
 };
 
 static bool sdl_inited = false;
@@ -53,25 +54,30 @@ void renderer_render(game_renderer * rnd, game_state * state){
   SDL_SetRenderTarget(rnd->renderer, NULL);
   SDL_SetRenderDrawColor(rnd->renderer, 0, 255, 255, 255);
   SDL_RenderClear(rnd->renderer);
+  int h,w;
+  SDL_GetWindowSize(rnd->window,&w, &h);
 
   oct_node * start_node = oct_get_nth_super(state->center_node, 5);
   vec3 offset = oct_get_super_offset(state->center_node, start_node);
   float size = oct_get_super_size(state->center_node, start_node);
-  float base_size = 48.0;
+  float base_size = 48.0/2;
   void render_fcn(oct_node * n, float s, vec3 offset)
   {
-
-    SDL_Texture * payload = oct_get_payload(n);
+    UNUSED(s);
+    texture_asset * payload = oct_get_payload(n);
     if(payload == NULL) return;
-    vec2 point = iso_offset(offset);
+    vec2 point = vec2_add(iso_offset(offset), payload->offset);
     //logd("Render: %f %f", s, size);vec2_print(point);vec3_print(offset);logd("\n");
     SDL_Rect rec;
-    rec.x = point.x / 2;
-    rec.y = point.y / 2;
-    rec.w = s; 
-    rec.h = s;
-    SDL_SetTextureBlendMode(payload, SDL_BLENDMODE_BLEND);
-    SDL_RenderCopy(rnd->renderer, payload, NULL, &rec);
+    rec.x = point.x + h / 2;
+    rec.y = point.y + w / 2;
+    rec.w = 0; 
+    rec.h = 0;
+    int access;
+    u32 format;
+    SDL_QueryTexture(payload->texture, &format, &access, &rec.w, &rec.h);
+    SDL_SetTextureBlendMode(payload->texture, SDL_BLENDMODE_BLEND);
+    SDL_RenderCopy(rnd->renderer, payload->texture, NULL, &rec);
   }
 
   oct_render_node(start_node, size * base_size, vec3_scale(offset, base_size), render_fcn);
@@ -114,8 +120,19 @@ texture_asset * renderer_load_texture(game_renderer * rnd, const char * path){
   SDL_Texture * tex = SDL_CreateTexture(rnd->renderer, get_pixel_format(c), 
 					SDL_TEXTUREACCESS_STATIC, w, h);
   SDL_UpdateTexture(tex, NULL, im_data, w * c);
-  return (texture_asset *) tex;
+  texture_asset * texasset = alloc(sizeof(texasset));
+  *texasset = (texture_asset) {tex, vec2mk(0,0)};
+  return texasset;
 }
+
+void texture_asset_set_offset(texture_asset * asset, vec2 offset){
+  asset->offset = offset;
+}
+
+vec2 texture_asset_get_offset(texture_asset * asset){
+  return asset->offset;
+}
+
 
 void renderer_delete_asset(texture_asset * asset){
   UNUSED(asset);
