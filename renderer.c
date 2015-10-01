@@ -64,20 +64,25 @@ void renderer_render(game_renderer * rnd, world_state * state){
   void render_fcn(oct_node * n, float s, vec3 offset)
   {
     UNUSED(s);
-    texture_asset * payload = oct_get_payload(n);
-    if(payload == NULL) return;
-    vec2 point = vec2_add(iso_offset(offset), payload->offset);
-    //logd("Render: %f %f", s, size);vec2_print(point);vec3_print(offset);logd("\n");
-    SDL_Rect rec;
-    rec.x = point.x + h / 2;
-    rec.y = point.y + w / 2;
-    rec.w = 0; 
-    rec.h = 0;
-    int access;
-    u32 format;
-    SDL_QueryTexture(payload->texture, &format, &access, &rec.w, &rec.h);
-    SDL_SetTextureBlendMode(payload->texture, SDL_BLENDMODE_BLEND);
-    SDL_RenderCopy(rnd->renderer, payload->texture, NULL, &rec);
+    entity_list * pl = oct_get_payload(n);
+
+    if(pl == NULL) return;
+    for(size_t i = 0; i < pl->cnt; i++){
+      entity_header * payload = pl->entity[i];
+      if(payload->type == OBJECT)
+	offset = vec3_add(offset, vec3_scale(((entity *) payload)->offset, s));
+      vec2 point = vec2_add(iso_offset(offset), payload->asset->offset);
+      SDL_Rect rec;
+      rec.x = point.x + h / 2;
+      rec.y = point.y + w / 2;
+      rec.w = 0; 
+      rec.h = 0;
+      int access;
+      u32 format;
+      SDL_QueryTexture(payload->asset->texture, &format, &access, &rec.w, &rec.h);
+      SDL_SetTextureBlendMode(payload->asset->texture, SDL_BLENDMODE_BLEND);
+      SDL_RenderCopy(rnd->renderer, payload->asset->texture, NULL, &rec);
+    }
   }
 
   oct_render_node(start_node, size * base_size, vec3_scale(offset, base_size), render_fcn);

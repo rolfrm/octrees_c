@@ -17,6 +17,22 @@ void _error(const char * file, int line, const char * str, ...){
   raise(SIGINT);
 }
 
+tile * insert_tile(oct_node * oc, vec3i pos, texture_asset * asset){
+  oc = oct_get_relative(oc, pos);
+  tile t = {TILE, asset};
+  tile * t2 = clone(&t, sizeof(t));
+  add_entity(oc, (entity_header *) t2);
+  return t2;
+}
+
+entity * insert_entity(oct_node * oc, vec3 pos, vec3 size, texture_asset * asset){
+  oc = oct_find_fitting_node(oc, &pos, &size);
+  entity e = {OBJECT, asset, pos, size};
+  entity * e2 = clone(&e, sizeof(entity));
+  add_entity(oc, (entity_header *) e2);
+  return e2;
+}
+
 int main(){
   oct_node * n1 = oct_create();
   oct_node * n2 = oct_get_super(n1);
@@ -73,21 +89,27 @@ int main(){
   texture_asset * tile3 = renderer_load_texture(rnd2, "../racket_octree/tile2x2.png");
   texture_asset_set_offset(tile22, vec2mk(0, -41));
   texture_asset_set_offset(tile3, vec2mk(0, - 77));
-  oct_set_payload(n1, tile22);
-  oct_set_payload(oct_get_relative(n1, vec3i_make(0,0,1)), tile22);
-  oct_set_payload(oct_get_relative(n1, vec3i_make(0,-1,0)), tile22);
-  oct_set_payload(oct_get_relative(n1, vec3i_make(4,-4,4)), tile22);
-  oct_set_payload(oct_get_super(oct_get_relative(n1, vec3i_make(4,-6,4))), tile3);
+  vec3 p = vec3mk(1.0, 1.0, 1.0);
+  vec3 s = vec3mk(0.4, 0.4, 0.4);
+  oct_find_fitting_node(n1, &p, &s);
+  insert_tile(n1, vec3i_make(0, 0, 0), tile22);
+  insert_tile(n1, vec3i_make(0, -1, 0), tile22);
+  insert_tile(n1, vec3i_make(4, -4, 4), tile22);
+  entity * n = insert_entity(n1, vec3mk(4.9, -3, 4.9), vec3mk(1.0, 1.0, 1.0), tile22);
+  //return 0;
+  insert_tile(oct_get_super(oct_get_relative(n1, vec3i_make(4,-6,4))), vec3i_make(0, 0, 0), tile3);
   for(int i = 0; i < 4; i++)
-    oct_set_payload(oct_get_relative(n1, vec3i_make(0,-2, 1 + i)), tile22);
+    insert_tile(n1, vec3i_make(0, -2, 1 + i), tile22);
   for(int i = 0; i < 4; i++)
-    oct_set_payload(oct_get_relative(n1, vec3i_make(i, 0, 1)), tile22);
+    insert_tile(n1, vec3i_make(i,0,1), tile22);
   for(int i = 0; i < 10; i++)
-    oct_set_payload(oct_get_relative(n1, vec3i_make(3, 0, i)), tile22);
+    insert_tile(n1, vec3i_make(3, 0, i), tile22);
+
   while(true){
     renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
+    n->offset = vec3_add(n->offset, vec3mk(-0.01, 0, -0.01));
     for(u32 i = 0; i < event_cnt; i++)
       switch(evt[i].type){
       case QUIT:
