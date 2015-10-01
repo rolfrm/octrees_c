@@ -23,3 +23,6 @@ void oct_lookup_blocks(oct_node * node, vec3 position, vec3 size,
 
 // Returns the nth parent of 'node'.
 oct_node * oct_get_nth_super(oct_node * node, int n);
+
+// Finds the node that fulfills the following criteria. all size < 1.0, any size > 0.5, 0 < position < 1
+oct_node * oct_find_fitting_node(oct_node * node, vec3 * io_position, vec3 * io_size);

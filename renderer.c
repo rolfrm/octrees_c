@@ -81,9 +81,7 @@ void renderer_render(game_renderer * rnd, game_state * state){
   }
 
   oct_render_node(start_node, size * base_size, vec3_scale(offset, base_size), render_fcn);
-  
-  ellipseColor(rnd->renderer,10,10,10,10,0xFF00FFFF);
-
+ 
   SDL_RenderPresent(rnd->renderer);  
 }
 

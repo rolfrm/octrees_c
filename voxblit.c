@@ -93,6 +93,8 @@ int main(){
       case QUIT:
 	return 0;
       case KEY:
+	if(evt[i].key.sym == KEY_ESCAPE)
+	  return 0;
 	logd("%c\n", keysym_descr_from_keysym(evt[i].key.sym).charcode);
 	break;
       default:
