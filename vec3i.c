@@ -22,3 +22,7 @@ void vec3i_print(vec3i v){
 vec3 vec3i_to_vec3(vec3i v){
   return vec3mk(v.x, v.y, v.z);
 }
+
+vec3i vec3i_from_vec3(vec3 v){
+  return (vec3i){v.x, v.y, v.z};
+}

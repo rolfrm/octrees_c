@@ -131,7 +131,21 @@ void oct_lookup_blocks(oct_node * node, vec3 position, vec3 size,
 oct_node * oct_find_fitting_node(oct_node * node, vec3 * io_position, vec3 * io_size){
   vec3 size = *io_size;
   vec3 position = *io_position;
-  while(
+  while(size.x > 1 || size.y > 1 || size.z > 1){
+    position = to_super_coords(oct_index(node), position);
+    size = to_super_size(size);
+    node = oct_get_super(node);
+  }
+  while(size.x < 0.5 && size.y < 0.5 && size.z < 0.5){
+    position = to_sub_coords(0, position);
+    size = to_sub_size(size);
+    node = oct_get_sub(node, 0);
+  }
+  vec3i offset = vec3i_from_vec3(position);
+  oct_node * newnode = oct_get_relative(node, offset);
+  *io_position = vec3_sub(position, vec3i_to_vec3(offset));
+  *io_size = size;
+  return newnode;
 }
 
 oct_node * oct_get_nth_super(oct_node * node, int n){

@@ -68,7 +68,7 @@ int main(){
   oct_lookup_blocks(n1, vec3mk(0.0, 0.0, 0.0), vec3mk(2.0,2.0,1.0), collision_node);
 
   game_renderer * rnd2 = renderer_load(600, 600);
-  game_state state = { n1 };
+  world_state state = { n1 };
   texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile22.png");
   texture_asset * tile3 = renderer_load_texture(rnd2, "../racket_octree/tile2x2.png");
   texture_asset_set_offset(tile22, vec2mk(0, -41));

@@ -50,7 +50,7 @@ game_renderer * renderer_load(int width, int height){
   return rnd;
 }
 
-void renderer_render(game_renderer * rnd, game_state * state){
+void renderer_render(game_renderer * rnd, world_state * state){
   SDL_SetRenderTarget(rnd->renderer, NULL);
   SDL_SetRenderDrawColor(rnd->renderer, 0, 255, 255, 255);
   SDL_RenderClear(rnd->renderer);
