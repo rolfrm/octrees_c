@@ -3,19 +3,28 @@
 typedef struct _texture_asset texture_asset;
 typedef enum _entity_type{
   TILE,
-  OBJECT
+  OBJECT,
+  SATELITE
 }entity_type;
 
 typedef struct {
   entity_type type;
-  texture_asset * asset;
   oct_node * node;
 }entity_header;
 
+typedef struct _entity entity;
+
 typedef struct {
   entity_type type;
-  texture_asset * asset;
   oct_node * node;
+  vec3 offset;
+  entity * origin;
+}satelite;
+
+typedef struct {
+  entity_type type;
+  oct_node * node;
+  texture_asset * asset;
 }tile;
 
 typedef struct {
@@ -24,15 +33,16 @@ typedef struct {
 }entity_list;
 
 void add_entity(oct_node * oc, entity_header * eh);
-void remove_entity(oct_node * oc, entity_header * eh);
-typedef struct{
+void remove_entity(entity_header * eh);
+struct _entity{
   entity_type type;
-  texture_asset * texture;
   oct_node * node;
+  texture_asset * texture;
   vec3 offset;
   vec3 size;
-  
-}entity;
+  satelite * satelites;
+  int satelite_count;
+};
 
 typedef struct _world_state{
   oct_node * center_node;

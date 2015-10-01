@@ -20,6 +20,8 @@ oct_node * oct_create();
 // Destructs an oct_node and all child nodes.
 void oct_delete(oct_node * node);
 
+void oct_delete_sub(oct_node * node, int idx);
+
 // Gets the payload pointer of a node
 void * oct_get_payload(oct_node * node);
 

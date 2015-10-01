@@ -53,6 +53,12 @@ void oct_delete(oct_node * oc){
   dealloc(oc);
 }
 
+void oct_delete_sub(oct_node * oc, int i){
+  ASSERT(oc->sub[i] != NULL);
+  oct_delete(oc->sub[i]);
+  oc->sub[i] = NULL;
+}
+
 void * oct_get_payload(oct_node * node){
   return node->payload;
 }

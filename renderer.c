@@ -69,9 +69,18 @@ void renderer_render(game_renderer * rnd, world_state * state){
     if(pl == NULL) return;
     for(size_t i = 0; i < pl->cnt; i++){
       entity_header * payload = pl->entity[i];
-      if(payload->type == OBJECT)
+      texture_asset * asset = NULL;
+      if(payload->type == OBJECT){
 	offset = vec3_add(offset, vec3_scale(((entity *) payload)->offset, s));
-      vec2 point = vec2_add(iso_offset(offset), payload->asset->offset);
+	asset = ((entity *) payload)->texture;
+      }else if(payload->type == TILE){
+	asset = ((tile *) payload)->asset;
+      }else if(payload->type == SATELITE){
+	asset = ((satelite *) payload)->origin->texture;
+	offset = vec3_add(offset, vec3_scale(((satelite *) payload)->offset, s));
+      }
+      if(asset == NULL) return;
+      vec2 point = vec2_add(iso_offset(offset), asset->offset);
       SDL_Rect rec;
       rec.x = point.x + h / 2;
       rec.y = point.y + w / 2;
@@ -79,9 +88,9 @@ void renderer_render(game_renderer * rnd, world_state * state){
       rec.h = 0;
       int access;
       u32 format;
-      SDL_QueryTexture(payload->asset->texture, &format, &access, &rec.w, &rec.h);
-      SDL_SetTextureBlendMode(payload->asset->texture, SDL_BLENDMODE_BLEND);
-      SDL_RenderCopy(rnd->renderer, payload->asset->texture, NULL, &rec);
+      SDL_QueryTexture(asset->texture, &format, &access, &rec.w, &rec.h);
+      SDL_SetTextureBlendMode(asset->texture, SDL_BLENDMODE_BLEND);
+      SDL_RenderCopy(rnd->renderer, asset->texture, NULL, &rec);
     }
   }
 

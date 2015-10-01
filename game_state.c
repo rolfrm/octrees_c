@@ -15,7 +15,7 @@
 void add_entity(oct_node * oc, entity_header * eh){
   entity_list * ceh = oct_get_payload(oc);
   if(ceh == NULL){
-    ceh = alloc0(sizeof(entity_header));
+    ceh = alloc0(sizeof(entity_list));
     oct_set_payload(oc, ceh);
   }
   ceh->cnt += 1;
@@ -24,12 +24,12 @@ void add_entity(oct_node * oc, entity_header * eh){
   eh->node = oc;
 }
 
-void remove_entity(oct_node * oc, entity_header * eh){
-  entity_list * ceh = oct_get_payload(oc);
+void remove_entity(entity_header * eh){
+  entity_list * ceh = oct_get_payload(eh->node);
   ASSERT(ceh != NULL);
   for(size_t i = 0; i < ceh->cnt; i++){
     if(ceh->entity[i] == eh){
-      memmove(ceh->entity + i - 1, ceh->entity + i + 1, (ceh->cnt - i - 1) * sizeof(entity_header *));
+      memmove(ceh->entity + i, ceh->entity + i, (ceh->cnt - i - 1) * sizeof(entity_header *));
       break;
     }
   }
@@ -37,8 +37,11 @@ void remove_entity(oct_node * oc, entity_header * eh){
   if(ceh->cnt == 0){
     dealloc(ceh->entity);
     ceh->entity = NULL;
+    oct_set_payload(eh->node, NULL);
+    dealloc(ceh);
   }
-  else
-    ceh->entity = realloc(ceh->entity, ceh->cnt);
+  else{
+    ceh->entity = realloc(ceh->entity, ceh->cnt * sizeof(entity_header *));
+  }
   eh->node = NULL;
 }

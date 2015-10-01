@@ -19,7 +19,7 @@ void _error(const char * file, int line, const char * str, ...){
 
 tile * insert_tile(oct_node * oc, vec3i pos, texture_asset * asset){
   oc = oct_get_relative(oc, pos);
-  tile t = {TILE, asset, NULL};
+  tile t = {TILE, NULL, asset};
   tile * t2 = clone(&t, sizeof(t));
   add_entity(oc, (entity_header *) t2);
   return t2;
@@ -27,7 +27,7 @@ tile * insert_tile(oct_node * oc, vec3i pos, texture_asset * asset){
 
 entity * insert_entity(oct_node * oc, vec3 pos, vec3 size, texture_asset * asset){
   oc = oct_find_fitting_node(oc, &pos, &size);
-  entity e = {OBJECT, asset, NULL, pos, size};
+  entity e = {OBJECT, NULL, asset, pos, size, NULL, 0};
   entity * e2 = clone(&e, sizeof(entity));
   add_entity(oc, (entity_header *) e2);
   return e2;
@@ -35,7 +35,7 @@ entity * insert_entity(oct_node * oc, vec3 pos, vec3 size, texture_asset * asset
 
 void update_entity(entity * e){
   oct_node * oc = e->node;
-  remove_entity(oc, (entity_header *) e);
+  remove_entity((entity_header *) e);
   oc = oct_find_fitting_node(oc, &e->offset, &e->size);
   add_entity(oc, (entity_header *) e);
 }
@@ -113,6 +113,34 @@ int main(){
     insert_tile(n1, vec3i_make(3, 0, i), tile22);
 
   while(true){
+
+    size_t cnt = 0;
+    void cnt_cells(oct_node * oc, vec3 pos, vec3 size){
+      UNUSED(pos);UNUSED(size);
+      if(oc == n->node) return;
+      if(size.x != n->size.x) return;
+      cnt++;
+    }
+    oct_lookup_blocks(n->node, n->offset, n->size,  cnt_cells);
+    satelite sat[cnt];
+    oct_node * nodes[cnt];
+    cnt = 0;
+    void load_sat(oct_node * oc, vec3 pos, vec3 size){
+      
+      if(oc == n->node) return;
+      if(size.x != n->size.x) return;
+      nodes[cnt] = oc;
+      sat[cnt++] = (satelite){SATELITE, NULL, pos,n};
+
+    }
+    oct_lookup_blocks(n->node, n->offset, n->size,  load_sat);
+    n->satelites = sat;
+    n->satelite_count = array_count(sat);
+    for(size_t i = 0; i < cnt; i++){
+      add_entity(nodes[i], (entity_header *) &sat[i]);
+    }
+    //logd("%i \n", cnt);
+    UNUSED(state);
     renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
@@ -130,7 +158,15 @@ int main(){
       default:
 	continue;
       }
+    for(size_t i = 0; i < cnt; i++){
+      remove_entity((entity_header *) &sat[i]);
+    }
+    oct_node * np = n1;
+    while(oct_has_super(np))
+      np = oct_get_super(np);
+    oct_clean_tree(np);
   }
+  
   
   return 0;
 }

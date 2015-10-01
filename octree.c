@@ -153,3 +153,31 @@ oct_node * oct_get_nth_super(oct_node * node, int n){
     node = oct_get_super(node);
   return node;
 }
+
+static bool rec_clean(oct_node * node){
+  
+  int doclean[8] = {0};
+  for(int i = 0; i < 8; i++){
+    if(oct_has_sub(node, i)){
+      bool cancleansub = rec_clean(oct_get_sub(node, i));
+      doclean[i] = cancleansub ? 1 : 2;
+    };
+  }
+  bool allcleanable = oct_get_payload(node) == NULL;
+  for(int i = 0; i < 8; i++)
+    allcleanable &= doclean[i] != 2;
+  if(allcleanable){
+
+    return true;
+  }
+  for(int i = 0; i < 8; i++){
+    if(doclean[i] == 1){
+      oct_delete_sub(node, i);
+    }
+  }
+  return false;
+}
+
+void oct_clean_tree(oct_node * node){
+  rec_clean(node);
+}
