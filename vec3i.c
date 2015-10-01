@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <math.h>
 #include "iron/linmath.h"
 #include "iron/log.h"
 #include "vec3i.h"
@@ -24,5 +25,5 @@ vec3 vec3i_to_vec3(vec3i v){
 }
 
 vec3i vec3i_from_vec3(vec3 v){
-  return (vec3i){v.x, v.y, v.z};
+  return (vec3i){floor(v.x), floor(v.y), floor(v.z)};
 }

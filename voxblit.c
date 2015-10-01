@@ -19,7 +19,7 @@ void _error(const char * file, int line, const char * str, ...){
 
 tile * insert_tile(oct_node * oc, vec3i pos, texture_asset * asset){
   oc = oct_get_relative(oc, pos);
-  tile t = {TILE, asset};
+  tile t = {TILE, asset, NULL};
   tile * t2 = clone(&t, sizeof(t));
   add_entity(oc, (entity_header *) t2);
   return t2;
@@ -27,10 +27,17 @@ tile * insert_tile(oct_node * oc, vec3i pos, texture_asset * asset){
 
 entity * insert_entity(oct_node * oc, vec3 pos, vec3 size, texture_asset * asset){
   oc = oct_find_fitting_node(oc, &pos, &size);
-  entity e = {OBJECT, asset, pos, size};
+  entity e = {OBJECT, asset, NULL, pos, size};
   entity * e2 = clone(&e, sizeof(entity));
   add_entity(oc, (entity_header *) e2);
   return e2;
+}
+
+void update_entity(entity * e){
+  oct_node * oc = e->node;
+  remove_entity(oc, (entity_header *) e);
+  oc = oct_find_fitting_node(oc, &e->offset, &e->size);
+  add_entity(oc, (entity_header *) e);
 }
 
 int main(){
@@ -109,7 +116,8 @@ int main(){
     renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
-    n->offset = vec3_add(n->offset, vec3mk(-0.01, 0, -0.01));
+    n->offset = vec3_add(n->offset, vec3mk(-0.01, 0.01, -0.01));
+    update_entity(n);
     for(u32 i = 0; i < event_cnt; i++)
       switch(evt[i].type){
       case QUIT:

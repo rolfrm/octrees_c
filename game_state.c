@@ -21,6 +21,7 @@ void add_entity(oct_node * oc, entity_header * eh){
   ceh->cnt += 1;
   ceh->entity = realloc(ceh->entity, ceh->cnt * sizeof(entity_header *));
   ceh->entity[ceh->cnt - 1] = eh;
+  eh->node = oc;
 }
 
 void remove_entity(oct_node * oc, entity_header * eh){
@@ -28,8 +29,16 @@ void remove_entity(oct_node * oc, entity_header * eh){
   ASSERT(ceh != NULL);
   for(size_t i = 0; i < ceh->cnt; i++){
     if(ceh->entity[i] == eh){
-      memmove(ceh->entity + i, ceh->entity + i + 1, (ceh->cnt - i - 1) * sizeof(entity_header *));
-      return;
+      memmove(ceh->entity + i - 1, ceh->entity + i + 1, (ceh->cnt - i - 1) * sizeof(entity_header *));
+      break;
     }
   }
+  ceh->cnt -= 1;
+  if(ceh->cnt == 0){
+    dealloc(ceh->entity);
+    ceh->entity = NULL;
+  }
+  else
+    ceh->entity = realloc(ceh->entity, ceh->cnt);
+  eh->node = NULL;
 }
