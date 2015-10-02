@@ -67,15 +67,19 @@ void renderer_render(game_renderer * rnd, world_state * state){
     entity_list * pl = oct_get_payload(n);
 
     if(pl == NULL) return;
+
     for(size_t i = 0; i < pl->cnt; i++){
-      entity_header * payload = pl->entity[i];
+      logd("cnt: %i\n", i);
+      entity_header * payload = pl->entity[pl->cnt - i - 1];
       texture_asset * asset = NULL;
       if(payload->type == OBJECT){
 	offset = vec3_add(offset, vec3_scale(((entity *) payload)->offset, s));
 	asset = ((entity *) payload)->texture;
+	//return;
       }else if(payload->type == TILE){
 	asset = ((tile *) payload)->asset;
       }else if(payload->type == SATELITE){
+	logd("rendering satelite\n");
 	asset = ((satelite *) payload)->origin->texture;
 	offset = vec3_add(offset, vec3_scale(((satelite *) payload)->offset, s));
       }
@@ -147,7 +151,7 @@ vec2 texture_asset_get_offset(texture_asset * asset){
   return asset->offset;
 }
 
-
+ 
 void renderer_delete_asset(texture_asset * asset){
   UNUSED(asset);
 }
@@ -159,18 +163,16 @@ game_controller_state renderer_game_controller(){
 
   }else{
     const u8 * keys = SDL_GetKeyboardState(NULL);
-    
-    logd("KEYA : %i\n", keys[4]);
-    gc.axes[0] = (keys[SDLK_a] ? -1.0 : 0.0) +  (keys[SDLK_d] ? 1.0 : 0.0);
-    gc.axes[1] = (keys[SDLK_w] ? 1 : 0) + (keys[SDLK_s] ? -1 : 0);
+    gc.axes[0] = (keys[SDL_SCANCODE_A] ? -1.0 : 0.0) +  (keys[SDL_SCANCODE_D] ? 1.0 : 0.0);
+    gc.axes[1] = (keys[SDL_SCANCODE_W] ? 1 : 0) + (keys[SDL_SCANCODE_S] ? -1 : 0);
     gc.axes[2] = (keys[SDL_SCANCODE_LEFT] ? -1 : 0) +  (keys[SDL_SCANCODE_RIGHT] ? 1 : 0);
     gc.axes[3] = (keys[SDL_SCANCODE_UP] ? 1 : 0) + (keys[SDL_SCANCODE_DOWN] ? -1 : 0);
     gc.axes[4] = keys[SDL_SCANCODE_LCTRL] ? 1 : 0;
     gc.axes[5] = keys[SDL_SCANCODE_DOWN] ? 1 : 0;
-    gc.buttons[0] = keys[SDLK_e] ? BUTTON_DOWN : BUTTON_UP;
-    gc.buttons[1] = keys[SDLK_f] ? BUTTON_DOWN : BUTTON_UP;
+    gc.buttons[0] = keys[SDL_SCANCODE_E] ? BUTTON_DOWN : BUTTON_UP;
+    gc.buttons[1] = keys[SDL_SCANCODE_F] ? BUTTON_DOWN : BUTTON_UP;
     gc.buttons[2] = keys[SDL_SCANCODE_LSHIFT] ? BUTTON_DOWN : BUTTON_UP;
-    gc.buttons[3] = keys[SDL_SCANCODE_RETURN] ? BUTTON_DOWN : BUTTON_UP;
+    gc.buttons[3] = keys[SDL_SCANCODE_SPACE] ? BUTTON_DOWN : BUTTON_UP;
     gc.buttons[4] = keys[SDL_SCANCODE_RETURN] ? BUTTON_DOWN : BUTTON_UP;
     gc.buttons[5] = keys[SDL_SCANCODE_ESCAPE] ? BUTTON_DOWN : BUTTON_UP;
   }

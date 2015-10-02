@@ -112,22 +112,31 @@ int main(){
     insert_tile(n1, vec3i_make(3, 0, i), tile22);
 
   while(true){
-
+    {
+      for(int i = -1; i < 2; i++)
+	for(int j = -1; j < 2; j++)
+	  for(int k = -1; k < 2; k++)
+	    oct_get_relative(n->node, (vec3i){i,j,k});
+    }
     size_t cnt = 0;
     void cnt_cells(oct_node * oc, vec3 pos, vec3 size){
-      UNUSED(pos);UNUSED(size);
+      UNUSED(pos);UNUSED(size);UNUSED(oc);
       if(oc == n->node) return;
       if(size.x != n->size.x) return;
       cnt++;
     }
     oct_lookup_blocks(n->node, n->offset, n->size,  cnt_cells);
+
+	
     satelite sat[cnt];
     oct_node * nodes[cnt];
     cnt = 0;
     void load_sat(oct_node * oc, vec3 pos, vec3 size){
       
       if(oc == n->node) return;
+      logd("%f %f %i\n", size.x, n->size.x, size.x == n->size.x);
       if(size.x != n->size.x) return;
+
       nodes[cnt] = oc;
       sat[cnt++] = (satelite){SATELITE, NULL, pos,n};
 
@@ -142,7 +151,8 @@ int main(){
     renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
-    n->offset = vec3_add(n->offset, vec3mk(-0.01, 0.01, -0.01));
+    game_controller_state gcs = renderer_game_controller();
+    n->offset = vec3_add(n->offset, vec3mk(gcs.axes[0] * 0.1, gcs.axes[3] * 0.1, gcs.axes[1] * 0.1));
     update_entity(n);
     for(u32 i = 0; i < event_cnt; i++)
       switch(evt[i].type){
@@ -156,7 +166,7 @@ int main(){
       default:
 	continue;
       }
-    game_controller_state gcs = renderer_game_controller();
+
     game_controller_state_print(gcs);logd("\n");
     for(size_t i = 0; i < cnt; i++){
       remove_entity((entity_header *) &sat[i]);
