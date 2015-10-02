@@ -105,6 +105,8 @@ u32 renderer_read_events(event * buffer, u32 buffer_size){
   for(; cnt<buffer_size;cnt++){
     if(SDL_PollEvent(&evt)){
       buffer[cnt] = sdl_event_to_event(evt);
+      //if(evt.type == SDL_KEYUP)
+	//logd("%i %i\n", evt.key.keysym.sym, evt.key.keysym.scancode);
     }else{
       return cnt;
     }
@@ -148,4 +150,45 @@ vec2 texture_asset_get_offset(texture_asset * asset){
 
 void renderer_delete_asset(texture_asset * asset){
   UNUSED(asset);
+}
+
+
+game_controller_state renderer_game_controller(){
+  game_controller_state gc;
+  if(false){ //game controller connected
+
+  }else{
+    const u8 * keys = SDL_GetKeyboardState(NULL);
+    
+    logd("KEYA : %i\n", keys[4]);
+    gc.axes[0] = (keys[SDLK_a] ? -1.0 : 0.0) +  (keys[SDLK_d] ? 1.0 : 0.0);
+    gc.axes[1] = (keys[SDLK_w] ? 1 : 0) + (keys[SDLK_s] ? -1 : 0);
+    gc.axes[2] = (keys[SDL_SCANCODE_LEFT] ? -1 : 0) +  (keys[SDL_SCANCODE_RIGHT] ? 1 : 0);
+    gc.axes[3] = (keys[SDL_SCANCODE_UP] ? 1 : 0) + (keys[SDL_SCANCODE_DOWN] ? -1 : 0);
+    gc.axes[4] = keys[SDL_SCANCODE_LCTRL] ? 1 : 0;
+    gc.axes[5] = keys[SDL_SCANCODE_DOWN] ? 1 : 0;
+    gc.buttons[0] = keys[SDLK_e] ? BUTTON_DOWN : BUTTON_UP;
+    gc.buttons[1] = keys[SDLK_f] ? BUTTON_DOWN : BUTTON_UP;
+    gc.buttons[2] = keys[SDL_SCANCODE_LSHIFT] ? BUTTON_DOWN : BUTTON_UP;
+    gc.buttons[3] = keys[SDL_SCANCODE_RETURN] ? BUTTON_DOWN : BUTTON_UP;
+    gc.buttons[4] = keys[SDL_SCANCODE_RETURN] ? BUTTON_DOWN : BUTTON_UP;
+    gc.buttons[5] = keys[SDL_SCANCODE_ESCAPE] ? BUTTON_DOWN : BUTTON_UP;
+  }
+  return gc;
+}
+void game_controller_state_print(game_controller_state s){
+  logd("Axes: {");
+  for(size_t i = 0; i < array_count(s.axes); i++){
+    logd("%f", s.axes[i]);
+    if(i != array_count(s.axes) -1){
+      logd(", ");
+    }
+  }
+  logd("} Buttons: }");
+  for(size_t i = 0; i < array_count(s.buttons); i++){
+    logd("%i", s.buttons[i]);
+    if((i + 1) != array_count(s.axes)){
+      logd(", ");
+    }
+  }
 }

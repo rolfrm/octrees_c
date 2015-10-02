@@ -103,7 +103,6 @@ int main(){
   insert_tile(n1, vec3i_make(0, -1, 0), tile22);
   insert_tile(n1, vec3i_make(4, -4, 4), tile22);
   entity * n = insert_entity(n1, vec3mk(4.9, -3, 4.9), vec3mk(1.0, 1.0, 1.0), tile22);
-  //return 0;
   insert_tile(oct_get_super(oct_get_relative(n1, vec3i_make(4,-6,4))), vec3i_make(0, 0, 0), tile3);
   for(int i = 0; i < 4; i++)
     insert_tile(n1, vec3i_make(0, -2, 1 + i), tile22);
@@ -139,7 +138,6 @@ int main(){
     for(size_t i = 0; i < cnt; i++){
       add_entity(nodes[i], (entity_header *) &sat[i]);
     }
-    //logd("%i \n", cnt);
     UNUSED(state);
     renderer_render(rnd2, &state);
     event evt[32];
@@ -151,13 +149,15 @@ int main(){
       case QUIT:
 	return 0;
       case KEY:
-	if(evt[i].key.sym == KEY_ESCAPE)
-	  return 0;
-	logd("%c\n", keysym_descr_from_keysym(evt[i].key.sym).charcode);
+	//if(evt[i].key.sym == KEY_ESCAPE)
+	//  return 0;
+	//logd("%i %i\n", evt[i].key.sym, evt[i].key.scancode);
 	break;
       default:
 	continue;
       }
+    game_controller_state gcs = renderer_game_controller();
+    game_controller_state_print(gcs);logd("\n");
     for(size_t i = 0; i < cnt; i++){
       remove_entity((entity_header *) &sat[i]);
     }
@@ -166,7 +166,6 @@ int main(){
       np = oct_get_super(np);
     oct_clean_tree(np);
   }
-  
-  
+    
   return 0;
 }
