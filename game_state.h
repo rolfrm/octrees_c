@@ -40,8 +40,6 @@ struct _entity{
   texture_asset * texture;
   vec3 offset;
   vec3 size;
-  satelite * satelites;
-  int satelite_count;
 };
 
 typedef struct _world_state{

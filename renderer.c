@@ -65,25 +65,25 @@ void renderer_render(game_renderer * rnd, world_state * state){
   {
     UNUSED(s);
     entity_list * pl = oct_get_payload(n);
-
     if(pl == NULL) return;
-
     for(size_t i = 0; i < pl->cnt; i++){
-      logd("cnt: %i\n", i);
-      entity_header * payload = pl->entity[pl->cnt - i - 1];
+      entity_header * payload = pl->entity[i];
       texture_asset * asset = NULL;
       if(payload->type == OBJECT){
 	offset = vec3_add(offset, vec3_scale(((entity *) payload)->offset, s));
 	asset = ((entity *) payload)->texture;
-	//return;
+	continue;
       }else if(payload->type == TILE){
 	asset = ((tile *) payload)->asset;
+
       }else if(payload->type == SATELITE){
-	logd("rendering satelite\n");
 	asset = ((satelite *) payload)->origin->texture;
 	offset = vec3_add(offset, vec3_scale(((satelite *) payload)->offset, s));
       }
-      if(asset == NULL) return;
+      if(asset == NULL){
+	logd("Continuing..\n");
+	continue;
+      }
       vec2 point = vec2_add(iso_offset(offset), asset->offset);
       SDL_Rect rec;
       rec.x = point.x + h / 2;

@@ -27,7 +27,7 @@ tile * insert_tile(oct_node * oc, vec3i pos, texture_asset * asset){
 
 entity * insert_entity(oct_node * oc, vec3 pos, vec3 size, texture_asset * asset){
   oc = oct_find_fitting_node(oc, &pos, &size);
-  entity e = {OBJECT, NULL, asset, pos, size, NULL, 0};
+  entity e = {OBJECT, NULL, asset, pos, size};
   entity * e2 = clone(&e, sizeof(entity));
   add_entity(oc, (entity_header *) e2);
   return e2;
@@ -126,15 +126,13 @@ int main(){
       cnt++;
     }
     oct_lookup_blocks(n->node, n->offset, n->size,  cnt_cells);
-
-	
+    
     satelite sat[cnt];
     oct_node * nodes[cnt];
     cnt = 0;
     void load_sat(oct_node * oc, vec3 pos, vec3 size){
       
       if(oc == n->node) return;
-      logd("%f %f %i\n", size.x, n->size.x, size.x == n->size.x);
       if(size.x != n->size.x) return;
 
       nodes[cnt] = oc;
@@ -142,8 +140,6 @@ int main(){
 
     }
     oct_lookup_blocks(n->node, n->offset, n->size,  load_sat);
-    n->satelites = sat;
-    n->satelite_count = array_count(sat);
     for(size_t i = 0; i < cnt; i++){
       add_entity(nodes[i], (entity_header *) &sat[i]);
     }
