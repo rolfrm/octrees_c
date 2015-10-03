@@ -96,8 +96,14 @@ int main(){
   world_state state = { n1 };
   texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile22.png");
   texture_asset * tile3 = renderer_load_texture(rnd2, "../racket_octree/tile2x2.png");
+  texture_asset * tile1 = renderer_load_texture(rnd2, "../racket_octree/tile1.png");
+  texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy.png");
+  texture_asset * tile4 = renderer_load_texture(rnd2, "../racket_octree/tile23.png");
   texture_asset_set_offset(tile22, vec2mk(0, -41));
+  texture_asset_set_offset(tile4, vec2mk(0, -41));
   texture_asset_set_offset(tile3, vec2mk(0, - 77));
+  texture_asset_set_offset(tile1, vec2mk(0, -23));
+  texture_asset_set_offset(guy, vec2mk(0, -23));
   vec3 p = vec3mk(1.0, 1.0, 1.0);
   vec3 s = vec3mk(0.4, 0.4, 0.4);
   oct_find_fitting_node(n1, &p, &s);
@@ -105,25 +111,25 @@ int main(){
   for(int i = -size; i < size; i++)
     for(int j = -size; j < size; j++){
       insert_tile(n1, vec3i_make(i, 0, j), tile22);
-      if(rand() % 10 == 0){
-	insert_tile(n1, vec3i_make(i, 1, j), tile22);
-	if(rand() % 5 == 0){
-	  insert_tile(n1, vec3i_make(i, 2, j), tile22);
-	  if(rand() % 5 == 0){
-	    insert_tile(n1, vec3i_make(i, 3, j), tile22);
+      if(rand() % 40 == 0){
+	insert_tile(n1, vec3i_make(i, 1, j), tile4);
+	if(rand() % 1 == 0){
+	  insert_tile(n1, vec3i_make(i, 2, j), tile4);
+	  if(rand() % 1 == 0){
+	    insert_tile(n1, vec3i_make(i, 3, j), tile4);
+	    if(rand()% 1 == 0){
+	      insert_tile(n1, vec3i_make(i + 1, 3, j), tile4);
+	      insert_tile(n1, vec3i_make(i + 2, 3, j), tile4);
+	      insert_tile(n1, vec3i_make(i + 2, 2, j), tile4);
+	      insert_tile(n1, vec3i_make(i + 2, 1, j), tile4);
+	    }
 	  }
 	}
       }
     }
-  entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), tile22);
-  /*insert_tile(oct_get_super(oct_get_relative(n1, vec3i_make(4,-6,4))), vec3i_make(0, 0, 0), tile3);
-  for(int i = 0; i < 4; i++)
-    insert_tile(n1, vec3i_make(0, -2, 1 + i), tile22);
-  for(int i = 0; i < 4; i++)
-    insert_tile(n1, vec3i_make(i,0,1), tile22);
-  for(int i = 0; i < 10; i++)
-    insert_tile(n1, vec3i_make(3, 0, i), tile22);
-  */
+  //entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), tile1);
+  //entity * n = insert_entity(oct_get_sub(n1,0), vec3mk(0, 3, 0), vec3mk(1, 1, 1), tile1)
+  entity * n = insert_entity(oct_get_sub(n1,0), vec3mk(0, 3, 0), vec3mk(1, 1, 1), guy);
   while(true){
     {
       for(int i = -1; i < 2; i++)
@@ -136,6 +142,7 @@ int main(){
       UNUSED(pos);UNUSED(size);UNUSED(oc);
       if(oc == n->node) return;
       if(size.x != n->size.x) return;
+      if(oct_get_payload(oc) != NULL) return;
       cnt++;
     }
     oct_lookup_blocks(n->node, n->offset, n->size,  cnt_cells);
@@ -147,6 +154,11 @@ int main(){
     void load_sat(oct_node * oc, vec3 pos, vec3 size){
       if(oc == n->node) return;
       if(size.x != n->size.x) return;
+      if(oct_get_payload(oc) != NULL){ 
+	logd("Payload \n");
+	return;
+
+      }
       nodes[cnt] = oc;
       sat[cnt++] = (satelite){SATELITE, NULL, pos,n};
     }
@@ -177,11 +189,22 @@ int main(){
     for(size_t i = 0; i < cnt; i++){
       remove_entity((entity_header *) &sat[i]);
     }
-    n->offset = vec3_add(n->offset, vec3mk(gcs.axes[0] * 1, gcs.axes[3] * 1, gcs.axes[1] * 1));
+    vec3 mv = vec3mk(gcs.axes[0] * 1, gcs.axes[3] * 1, gcs.axes[1] * 1);
+    vec3 newoffset = vec3_add(n->offset, mv);
+    bool collision = false;
+    void check_collision(oct_node * oc, vec3 pos, vec3 size){
+      UNUSED(pos);UNUSED(size);
+      collision |= oc != n->node && oct_get_payload(oc);
+    }
+    
+    oct_lookup_blocks(n->node, newoffset, n->size, check_collision);
+    
+    if(!collision)
+      n->offset = newoffset;
     update_entity(n);
  
     oct_clean_tree(oct_get_nth_super(n->node, 5));
-    state.center_node = n->node;//oct_get_nth_super(n1,10);
+    state.center_node = oct_get_super(n->node);//oct_get_nth_super(n1,10);
     usleep(100000);
   }
     

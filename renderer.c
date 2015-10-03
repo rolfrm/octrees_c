@@ -79,6 +79,7 @@ void renderer_render(game_renderer * rnd, world_state * state){
       }else if(payload->type == SATELITE){
 	asset = ((satelite *) payload)->origin->texture;
 	offset = vec3_add(offset, vec3_scale(((satelite *) payload)->offset, s));
+	continue;
       }
       if(asset == NULL){
 	logd("Continuing..\n");
