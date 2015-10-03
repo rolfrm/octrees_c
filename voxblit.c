@@ -156,7 +156,7 @@ int main(){
       add_entity(nodes[i], (entity_header *) &sat[i]);
     }
     UNUSED(state);
-    //renderer_render(rnd2, &state);
+    renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     game_controller_state gcs = renderer_game_controller();
@@ -179,13 +179,10 @@ int main(){
     }
     n->offset = vec3_add(n->offset, vec3mk(gcs.axes[0] * 1, gcs.axes[3] * 1, gcs.axes[1] * 1));
     update_entity(n);
-    oct_node * np = n1;
-    oct_node * nsuper = np;
-    while((nsuper = oct_peek_super(np)))
-      np = nsuper;
-    oct_clean_tree(np);
+ 
+    oct_clean_tree(oct_get_nth_super(n->node, 5));
     state.center_node = n->node;//oct_get_nth_super(n1,10);
-    //usleep(100000);
+    usleep(100000);
   }
     
   return 0;
