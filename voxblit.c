@@ -1,4 +1,6 @@
 #include <iron/full.h>
+#include <stdlib.h>
+#include <time.h>
 #include "oct_node.h"
 #include "vec3i.h"
 #include "octree.h"
@@ -99,18 +101,29 @@ int main(){
   vec3 p = vec3mk(1.0, 1.0, 1.0);
   vec3 s = vec3mk(0.4, 0.4, 0.4);
   oct_find_fitting_node(n1, &p, &s);
-  insert_tile(n1, vec3i_make(0, 0, 0), tile22);
-  insert_tile(n1, vec3i_make(0, -1, 0), tile22);
-  insert_tile(n1, vec3i_make(4, -4, 4), tile22);
-  entity * n = insert_entity(n1, vec3mk(4.9, -3, 4.9), vec3mk(1.0, 1.0, 1.0), tile22);
-  insert_tile(oct_get_super(oct_get_relative(n1, vec3i_make(4,-6,4))), vec3i_make(0, 0, 0), tile3);
+  int size = 500;
+  for(int i = -size; i < size; i++)
+    for(int j = -size; j < size; j++){
+      insert_tile(n1, vec3i_make(i, 0, j), tile22);
+      if(rand() % 10 == 0){
+	insert_tile(n1, vec3i_make(i, 1, j), tile22);
+	if(rand() % 5 == 0){
+	  insert_tile(n1, vec3i_make(i, 2, j), tile22);
+	  if(rand() % 5 == 0){
+	    insert_tile(n1, vec3i_make(i, 3, j), tile22);
+	  }
+	}
+      }
+    }
+  entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), tile22);
+  /*insert_tile(oct_get_super(oct_get_relative(n1, vec3i_make(4,-6,4))), vec3i_make(0, 0, 0), tile3);
   for(int i = 0; i < 4; i++)
     insert_tile(n1, vec3i_make(0, -2, 1 + i), tile22);
   for(int i = 0; i < 4; i++)
     insert_tile(n1, vec3i_make(i,0,1), tile22);
   for(int i = 0; i < 10; i++)
     insert_tile(n1, vec3i_make(3, 0, i), tile22);
-
+  */
   while(true){
     {
       for(int i = -1; i < 2; i++)
@@ -128,28 +141,25 @@ int main(){
     oct_lookup_blocks(n->node, n->offset, n->size,  cnt_cells);
     
     satelite sat[cnt];
+    memset(&sat,0, sizeof(sat));
     oct_node * nodes[cnt];
     cnt = 0;
     void load_sat(oct_node * oc, vec3 pos, vec3 size){
-      
       if(oc == n->node) return;
       if(size.x != n->size.x) return;
-
       nodes[cnt] = oc;
       sat[cnt++] = (satelite){SATELITE, NULL, pos,n};
-
     }
+    
     oct_lookup_blocks(n->node, n->offset, n->size,  load_sat);
     for(size_t i = 0; i < cnt; i++){
       add_entity(nodes[i], (entity_header *) &sat[i]);
     }
     UNUSED(state);
-    renderer_render(rnd2, &state);
+    //renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     game_controller_state gcs = renderer_game_controller();
-    n->offset = vec3_add(n->offset, vec3mk(gcs.axes[0] * 0.1, gcs.axes[3] * 0.1, gcs.axes[1] * 0.1));
-    update_entity(n);
     for(u32 i = 0; i < event_cnt; i++)
       switch(evt[i].type){
       case QUIT:
@@ -167,10 +177,15 @@ int main(){
     for(size_t i = 0; i < cnt; i++){
       remove_entity((entity_header *) &sat[i]);
     }
+    n->offset = vec3_add(n->offset, vec3mk(gcs.axes[0] * 1, gcs.axes[3] * 1, gcs.axes[1] * 1));
+    update_entity(n);
     oct_node * np = n1;
-    while(oct_has_super(np))
-      np = oct_get_super(np);
+    oct_node * nsuper = np;
+    while((nsuper = oct_peek_super(np)))
+      np = nsuper;
     oct_clean_tree(np);
+    state.center_node = n->node;//oct_get_nth_super(n1,10);
+    //usleep(100000);
   }
     
   return 0;

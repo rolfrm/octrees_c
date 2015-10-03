@@ -21,9 +21,9 @@ oct_node * oct_get_sub(oct_node * oc, int idx){
   return oc->sub[idx];
 }
 
-bool oct_has_sub(oct_node * oc, int idx){
+oct_node * oct_peek_sub(oct_node * node, int idx){
   ASSERT(idx < 8 && idx >= 0);
-  return oc->sub[idx] != NULL;
+  return node->sub[idx];
 }
 
 oct_node * oct_get_super(oct_node * oc){
@@ -36,8 +36,8 @@ oct_node * oct_get_super(oct_node * oc){
   return oc->super;
 }
 
-bool oct_has_super(oct_node * oc){
-  return oc->super != NULL;
+oct_node * oct_peek_super(oct_node * node){
+  return node->super;
 }
 
 oct_node * oct_create(){

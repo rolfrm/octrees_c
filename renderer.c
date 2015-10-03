@@ -61,18 +61,18 @@ void renderer_render(game_renderer * rnd, world_state * state){
   vec3 offset = oct_get_super_offset(state->center_node, start_node);
   float size = oct_get_super_size(state->center_node, start_node);
   float base_size = 48.0/2;
-  void render_fcn(oct_node * n, float s, vec3 offset)
+  void render_fcn(oct_node * n, float s, vec3 _offset)
   {
     UNUSED(s);
     entity_list * pl = oct_get_payload(n);
     if(pl == NULL) return;
     for(size_t i = 0; i < pl->cnt; i++){
-      entity_header * payload = pl->entity[i];
+      vec3 offset = _offset;
+      entity_header * payload = pl->entity[pl->cnt - i - 1];
       texture_asset * asset = NULL;
       if(payload->type == OBJECT){
 	offset = vec3_add(offset, vec3_scale(((entity *) payload)->offset, s));
 	asset = ((entity *) payload)->texture;
-	continue;
       }else if(payload->type == TILE){
 	asset = ((tile *) payload)->asset;
 

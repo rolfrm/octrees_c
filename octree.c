@@ -3,10 +3,10 @@
 #include "vec3i.h"
 
 int oct_index(oct_node * oc){
-  ASSERT(oct_has_super(oc));
-  oct_node * super = oct_get_super(oc);
+  oct_node * s = oct_peek_super(oc);
+  ASSERT(s);
   for(int i = 0; i < 8; i++)
-    if(oct_has_sub(super, i) && oct_get_sub(super, i) == oc)
+    if(oct_peek_sub(s, i) == oc)
       return i;
   ERROR("Not a child node of that element\n");
   return -1;
@@ -44,9 +44,10 @@ void oct_render_node(oct_node * oc, float size, vec3 offset,
   float size2 = size * 0.5;
   for(size_t i = 0; i < array_count(idxes); i++){
     int idx = idxes[i];
-    if(oct_has_sub(oc, idx)){
+    oct_node * n = oct_peek_sub(oc, idx);
+    if(n){
       vec3 off = vec3i_to_vec3(vec3i_from_index(idx));
-      oct_render_node(oct_get_sub(oc, idx), size2, vec3_add(offset, vec3_scale(off, size2)), f);
+      oct_render_node(n, size2, vec3_add(offset, vec3_scale(off, size2)), f);
     }
   }
 }
@@ -80,7 +81,7 @@ static vec3 _oct_get_super_offset(oct_node * node, oct_node * super){
 vec3 oct_get_super_offset(oct_node * node, oct_node * super){
   { // Sanity check
     oct_node * n = node;
-    for(; n != super && oct_has_super(n); n = oct_get_super(n));
+    for(; n != super && oct_peek_super(n); n = oct_get_super(n));
     ASSERT(n == super);
   }
   return _oct_get_super_offset(node, super);
@@ -89,7 +90,7 @@ vec3 oct_get_super_offset(oct_node * node, oct_node * super){
 float oct_get_super_size(oct_node * node, oct_node * super){
   { // Sanity check
     oct_node * n = node;
-    for(; n != super && oct_has_super(n); n = oct_get_super(n));
+    for(; n != super && oct_peek_super(n); n = oct_get_super(n));
     ASSERT(n == super);
   }
   float f = 1;
@@ -111,14 +112,15 @@ static void lookup_blocks(oct_node * node, vec3 position, vec3 size,
     cb(node, position, size);
     for(int i = 0; i < 8; i++){
       if(i == idx) continue;
-      if(!oct_has_sub(node, i)) continue;
-      lookup_blocks(oct_get_sub(node, i), 
-		    to_sub_coords(i, position), to_sub_size(size), cb, -2);
+      oct_node * n = oct_peek_sub(node, i);
+      if(!n) continue;
+      lookup_blocks(n, to_sub_coords(i, position), to_sub_size(size), cb, -2);
     }
   }
-  if(idx == -2 || !oct_has_super(node)) return;
+  oct_node * super = oct_peek_super(node);
+  if(idx == -2 || !super) return;
   int idx2 = oct_index(node);
-  lookup_blocks(oct_get_super(node), 
+  lookup_blocks(super, 
 		to_super_coords(idx2, position), to_super_size(size), cb, idx2);
 }
 
@@ -158,8 +160,9 @@ static bool rec_clean(oct_node * node){
   
   int doclean[8] = {0};
   for(int i = 0; i < 8; i++){
-    if(oct_has_sub(node, i)){
-      bool cancleansub = rec_clean(oct_get_sub(node, i));
+    oct_node * n = oct_peek_sub(node, i);
+    if(n){
+      bool cancleansub = rec_clean(n);
       doclean[i] = cancleansub ? 1 : 2;
     };
   }

@@ -5,14 +5,13 @@ typedef struct _oct_node oct_node;
 // Gets or creates the idx'th sub node of the octree node.
 oct_node * oct_get_sub(oct_node * node, int idx);
 
-// Returns true if the node has a idx'th item.
-bool oct_has_sub(oct_node * node, int idx);
+// Gets the idx'th sub node of the octree node, might be NULL if not set.
+oct_node * oct_peek_sub(oct_node * node, int idx);
 
 // Gets or creates a super node of the node.
 oct_node * oct_get_super(oct_node * node);
 
-// Returns true of node has a super node.
-bool oct_has_super(oct_node * node);
+oct_node * oct_peek_super(oct_node * node);
 
 // creates a new oct_node.
 oct_node * oct_create();
