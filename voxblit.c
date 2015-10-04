@@ -102,16 +102,18 @@ int main(){
   texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy3.png");
   texture_asset * tile4 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
   texture_asset * tile5 = renderer_load_texture(rnd2, "../racket_octree/tile8.png");
+  texture_asset * rock_small = renderer_load_texture(rnd2, "../racket_octree/rock_small.png");
   texture_asset_set_offset(tile22, vec2mk(0, -42));
   texture_asset_set_offset(tile25, vec2mk(0, -42));
   texture_asset_set_offset(tile5, vec2mk(0, -42));
   texture_asset_set_offset(tile4, vec2mk(0, -42));
   texture_asset_set_offset(tile3, vec2mk(0, - 77));
   texture_asset_set_offset(tile1, vec2mk(0, -23));
+  texture_asset_set_offset(rock_small, vec2mk(0, -19));
   texture_asset_set_offset(guy, vec2mk(0, -60));
-  vec3 p = vec3mk(1.0, 1.0, 1.0);
-  vec3 s = vec3mk(0.4, 0.4, 0.4);
-  oct_find_fitting_node(n1, &p, &s);
+  for(int j = 0; j < 10; j++)
+    for(int i = 0; i < j; i++)
+      insert_tile(oct_get_sub(n1,0), vec3i_make(0, 2 + i, -2 - j), rock_small);
   int size = 500;
   for(int i = -size; i < size; i++)
     for(int j = -size; j < size; j++){
