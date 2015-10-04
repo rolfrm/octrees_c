@@ -60,7 +60,7 @@ void renderer_render(game_renderer * rnd, world_state * state){
   oct_node * start_node = oct_get_nth_super(state->center_node, 6);
   vec3 offset = oct_get_super_offset(state->center_node, start_node);
   float size = oct_get_super_size(state->center_node, start_node);
-  float base_size = 48.0/2;
+  float base_size = 56.0/2;
   void render_fcn(oct_node * n, float s, vec3 _offset)
   {
     UNUSED(s);

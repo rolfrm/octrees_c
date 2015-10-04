@@ -94,16 +94,19 @@ int main(){
 
   game_renderer * rnd2 = renderer_load(600, 600);
   world_state state = { n1 };
-  texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile22.png");
+  texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
+  texture_asset * tile25 = renderer_load_texture(rnd2, "../racket_octree/tile7.png");
   texture_asset * tile3 = renderer_load_texture(rnd2, "../racket_octree/tile2x2.png");
   texture_asset * tile1 = renderer_load_texture(rnd2, "../racket_octree/tile1.png");
-  texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy.png");
-  texture_asset * tile4 = renderer_load_texture(rnd2, "../racket_octree/tile23.png");
-  texture_asset_set_offset(tile22, vec2mk(0, -41));
-  texture_asset_set_offset(tile4, vec2mk(0, -41));
+  //  texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy2.png");
+  texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy3.png");
+  texture_asset * tile4 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
+  texture_asset_set_offset(tile22, vec2mk(0, -42));
+  texture_asset_set_offset(tile25, vec2mk(0, -42));
+  texture_asset_set_offset(tile4, vec2mk(0, -42));
   texture_asset_set_offset(tile3, vec2mk(0, - 77));
   texture_asset_set_offset(tile1, vec2mk(0, -23));
-  texture_asset_set_offset(guy, vec2mk(0, -23));
+  texture_asset_set_offset(guy, vec2mk(0, -60));
   vec3 p = vec3mk(1.0, 1.0, 1.0);
   vec3 s = vec3mk(0.4, 0.4, 0.4);
   oct_find_fitting_node(n1, &p, &s);
@@ -112,16 +115,16 @@ int main(){
     for(int j = -size; j < size; j++){
       insert_tile(n1, vec3i_make(i, 0, j), tile22);
       if(rand() % 40 == 0){
-	insert_tile(n1, vec3i_make(i, 1, j), tile4);
+	insert_tile(n1, vec3i_make(i, 1, j), tile25);
 	if(rand() % 1 == 0){
-	  insert_tile(n1, vec3i_make(i, 2, j), tile4);
+	  insert_tile(n1, vec3i_make(i, 2, j), tile25);
 	  if(rand() % 1 == 0){
-	    insert_tile(n1, vec3i_make(i, 3, j), tile4);
+	    insert_tile(n1, vec3i_make(i, 3, j), tile22);
 	    if(rand()% 1 == 0){
-	      insert_tile(n1, vec3i_make(i + 1, 3, j), tile4);
-	      insert_tile(n1, vec3i_make(i + 2, 3, j), tile4);
-	      insert_tile(n1, vec3i_make(i + 2, 2, j), tile4);
-	      insert_tile(n1, vec3i_make(i + 2, 1, j), tile4);
+	      insert_tile(n1, vec3i_make(i + 1, 3, j), tile22);
+	      insert_tile(n1, vec3i_make(i + 2, 3, j), tile22);
+	      insert_tile(n1, vec3i_make(i + 2, 2, j), tile25);
+	      insert_tile(n1, vec3i_make(i + 2, 1, j), tile25);
 	    }
 	  }
 	}
@@ -129,7 +132,10 @@ int main(){
     }
   //entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), tile1);
   //entity * n = insert_entity(oct_get_sub(n1,0), vec3mk(0, 3, 0), vec3mk(1, 1, 1), tile1)
-  entity * n = insert_entity(oct_get_sub(n1,0), vec3mk(0, 3, 0), vec3mk(1, 1, 1), guy);
+  entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), guy);
+  entity * n_2 = insert_entity(n1, vec3mk(-1, 1, 0), vec3mk(1, 1, 1),guy);
+  entity * n_3 = insert_entity(n1, vec3mk(-2, 1, 0), vec3mk(1, 1, 1), guy);
+  entity * n_4 = insert_entity(n1, vec3mk(-3, 1, 0), vec3mk(1, 1, 1), guy);
   while(true){
     {
       for(int i = -1; i < 2; i++)
@@ -199,12 +205,27 @@ int main(){
     
     oct_lookup_blocks(n->node, newoffset, n->size, check_collision);
     
-    if(!collision)
+    if(!collision){
       n->offset = newoffset;
-    update_entity(n);
+      oct_node * old = n->node;
+      oct_node * o2 = n_2->node;
+      oct_node * o3 = n_3->node;
+      update_entity(n);
+      if(old != n->node){
+	remove_entity((entity_header *) n_2);
+	remove_entity((entity_header *) n_3);
+	remove_entity((entity_header *) n_4);
+	add_entity(old,(entity_header *)  n_2);
+	add_entity(o2,(entity_header *)  n_3);
+	add_entity(o3,(entity_header *)  n_4);
+      }
+    }
+
+    //update_entity(n_2);
+
  
     oct_clean_tree(oct_get_nth_super(n->node, 5));
-    state.center_node = oct_get_super(n->node);//oct_get_nth_super(n1,10);
+    state.center_node = n->node; //oct_get_super(n->node);//oct_get_nth_super(n1,10);
     usleep(100000);
   }
     
