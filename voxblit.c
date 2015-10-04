@@ -101,8 +101,10 @@ int main(){
   //  texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy2.png");
   texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy3.png");
   texture_asset * tile4 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
+  texture_asset * tile5 = renderer_load_texture(rnd2, "../racket_octree/tile8.png");
   texture_asset_set_offset(tile22, vec2mk(0, -42));
   texture_asset_set_offset(tile25, vec2mk(0, -42));
+  texture_asset_set_offset(tile5, vec2mk(0, -42));
   texture_asset_set_offset(tile4, vec2mk(0, -42));
   texture_asset_set_offset(tile3, vec2mk(0, - 77));
   texture_asset_set_offset(tile1, vec2mk(0, -23));
@@ -113,7 +115,8 @@ int main(){
   int size = 500;
   for(int i = -size; i < size; i++)
     for(int j = -size; j < size; j++){
-      insert_tile(n1, vec3i_make(i, 0, j), tile22);
+      int biome = ((i+j) / 10) & 3;
+      insert_tile(n1, vec3i_make(i, 0, j), biome == 1 ? tile5 : tile22);
       if(rand() % 40 == 0){
 	insert_tile(n1, vec3i_make(i, 1, j), tile25);
 	if(rand() % 1 == 0){
@@ -128,6 +131,13 @@ int main(){
 	    }
 	  }
 	}
+      }else if(rand() % 20 == 0){
+	insert_tile(n1, vec3i_make(i, 1, j), tile5);
+	insert_tile(n1, vec3i_make(i, 1, j+1), tile5);
+	insert_tile(n1, vec3i_make(i+1, 1, j), tile5);
+	insert_tile(n1, vec3i_make(i+1, 1, j+1), tile5);
+	if(rand() % 10 == 0)
+	  insert_tile(n1, vec3i_make(i, 2, j), tile5);
       }
     }
   //entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), tile1);
