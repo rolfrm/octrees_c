@@ -43,56 +43,9 @@ void update_entity(entity * e){
 }
 
 int main(){
-  oct_node * n1 = oct_create();
-  oct_node * n2 = oct_get_super(n1);
-  oct_node * n3 = oct_get_super(n2);
-  oct_node * n4 = oct_get_super(n3);
-  oct_node * n5 = oct_get_super(n4);
-  oct_node * n15 = oct_get_super(n5);
-  oct_node * n16 = oct_get_super(n15);
-  logd("N4 index: %i %i %i %i %i\n", oct_index(n1), oct_index(n2), oct_index(n3), oct_index(n4), oct_index(n5));
-  ASSERT(n1 == oct_get_sub(n2, oct_index(n1)));
-  oct_node * n6 = oct_get_relative(n1, vec3i_make(10,0,0));
-  ASSERT(n1 != n6);
-  oct_node * n7 = oct_get_relative(n6, vec3i_make(-10,0,0));
-  oct_node * n8 = oct_get_relative(n7, vec3i_make(10,0,0));
-  ASSERT(n7 == n1);
-  ASSERT(n8 == n6);
-  
-  hash_table * ht = ht_create(1024, 8, 8);
-  size_t x = 1;
-  ht_insert(ht, &n1, &x);
-  for(int i = -5; i < 5; i++){
-    for(int j = -5; j < 5; j++){
-      oct_node * n = oct_get_relative(n1, vec3i_make(i,j,0));
-      size_t x2 = i * i * j * j;
-      ht_insert(ht, &n, &x2);
-    }
-  }
-
-  oct_node * render_node = n16;
-  vec3 offset = oct_get_super_offset(n1, render_node);
-  float super_size = oct_get_super_size(n1, render_node);
-  
-  void rnd(oct_node * oc, float s, vec3 o){  
-    size_t * x1 = ht_lookup(ht, &oc);
-    if(x1 != NULL){
-      logd("%p %f %4i ", oc, s * super_size, (x1 != NULL ? *x1 : 0)); 
-      vec3_print(vec3_scale(o, super_size)); 
-      logd("\n");
-    }
-  }
-  
-  oct_render_node(render_node, 1.0, vec3mk(0.0, 0.0, 0.0), rnd);
-
-  vec3_print(offset);logd(" %f ", super_size);logd("\n");
-
-  void collision_node(oct_node * oc, vec3 pos, vec3 size){
-    logd("Collision with: %p %p", oc, ht_lookup(ht, &oc));vec3_print(pos);vec3_print(size);logd("\n");
-  }
-  oct_lookup_blocks(n1, vec3mk(0.0, 0.0, 0.0), vec3mk(2.0,2.0,1.0), collision_node);
 
   game_renderer * rnd2 = renderer_load(500, 500, 28);
+  oct_node * n1 = oct_create();
   world_state state = { n1 };
   texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
   texture_asset * tile25 = renderer_load_texture(rnd2, "../racket_octree/tile7.png");
@@ -118,7 +71,7 @@ int main(){
   for(int j = 0; j < 10; j++)
     for(int i = 0; i < j; i++)
       insert_tile(oct_get_sub(n1,0), vec3i_make(0, 2 + i, -2 - j), rock_small);
-  int size = 500;
+  int size = 100;
   for(int i = -size; i < size; i++)
     for(int j = -size; j < size; j++){
       int biome = ((i+j) / 10) & 3;
@@ -149,51 +102,9 @@ int main(){
 	  insert_tile(n1, vec3i_make(i, 1 + k, j), tile5);
       }
     }
-  //entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), tile1);
-  //entity * n = insert_entity(oct_get_sub(n1,0), vec3mk(0, 3, 0), vec3mk(1, 1, 1), tile1)
   entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), guy);
   entity * n_2 = insert_entity(n1, vec3mk(0, 2, 0), vec3mk(1, 1, 1), guyupper);
-  UNUSED(n_2);
-  //entity * n_2 = insert_entity(n1, vec3mk(-1, 1, 0), vec3mk(1, 1, 1),guy);
-  //entity * n_3 = insert_entity(n1, vec3mk(-2, 1, 0), vec3mk(1, 1, 1), guy);
-  //entity * n_4 = insert_entity(n1, vec3mk(-3, 1, 0), vec3mk(1, 1, 1), guy);
   while(true){
-    if(false){
-      for(int i = -1; i < 2; i++)
-	for(int j = -1; j < 2; j++)
-	  for(int k = -1; k < 2; k++)
-	    oct_get_relative(n->node, (vec3i){i,j,k});
-    }
-    size_t cnt = 0;
-    void cnt_cells(oct_node * oc, vec3 pos, vec3 size){
-      UNUSED(pos);UNUSED(size);UNUSED(oc);
-      if(oc == n->node) return;
-      if(size.x != n->size.x) return;
-      if(oct_get_payload(oc) != NULL) return;
-      cnt++;
-    }
-    oct_lookup_blocks(n->node, n->offset, n->size,  cnt_cells);
-    
-    satelite sat[cnt];
-    memset(&sat,0, sizeof(sat));
-    oct_node * nodes[cnt];
-    cnt = 0;
-    void load_sat(oct_node * oc, vec3 pos, vec3 size){
-      if(oc == n->node) return;
-      if(size.x != n->size.x) return;
-      if(oct_get_payload(oc) != NULL){ 
-	logd("Payload \n");
-	return;
-	
-      }
-      nodes[cnt] = oc;
-      sat[cnt++] = (satelite){SATELITE, NULL, pos,n};
-    }
-    
-    oct_lookup_blocks(n->node, n->offset, n->size,  load_sat);
-    for(size_t i = 0; i < cnt; i++){
-      add_entity(nodes[i], (entity_header *) &sat[i]);
-    }
     UNUSED(state);
     renderer_render(rnd2, &state);
     event evt[32];
@@ -204,18 +115,13 @@ int main(){
       case QUIT:
 	return 0;
       case KEY:
-	//if(evt[i].key.sym == KEY_ESCAPE)
-	//  return 0;
-	//logd("%i %i\n", evt[i].key.sym, evt[i].key.scancode);
 	break;
       default:
 	continue;
       }
 
     game_controller_state_print(gcs);logd("\n");
-    for(size_t i = 0; i < cnt; i++){
-      remove_entity((entity_header *) &sat[i]);
-    }
+    
     vec3 mv = vec3mk(gcs.axes[0] * 1, gcs.axes[3] * 1, gcs.axes[1] * 1);
     vec3 newoffset = vec3_add(n->offset, mv);
     bool collision = false;
@@ -230,13 +136,18 @@ int main(){
     oct_lookup_blocks(n_2->node, newoffset, n_2->size, check_collision);
 
     if(!collision){
+      oct_node * _n = n->node;
+      oct_node * _n2 = n_2->node;
+      
       n->offset = newoffset;
       n_2->offset = newoffset;
-      update_entity(n); 
-      update_entity(n_2);
+      remove_entity((entity_header *) n);
+      remove_entity((entity_header *) n_2);
+      add_entity(oct_find_fitting_node(_n, &n->offset, &n->size), (entity_header *) n);
+      add_entity(oct_find_fitting_node(_n2, &n_2->offset, &n_2->size), (entity_header *) n_2);
     }
     oct_clean_tree(oct_get_nth_super(n->node, 5));
-    state.center_node = n->node; //oct_get_super(n->node);//oct_get_nth_super(n1,10);
+    state.center_node = n->node;
     usleep(100000);
   }
     
