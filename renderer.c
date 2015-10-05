@@ -60,9 +60,10 @@ void renderer_render(game_renderer * rnd, world_state * state){
   int h,w;
   SDL_GetWindowSize(rnd->window,&w, &h);
 
-  oct_node * start_node = oct_get_nth_super(state->center_node, 6);
+  oct_node * start_node = oct_get_nth_super(state->center_node, 4);
   vec3 offset = oct_get_super_offset(state->center_node, start_node);
   float size = oct_get_super_size(state->center_node, start_node);
+
   float base_size = 56.0/2;
   void render_fcn(oct_node * n, float s, vec3 _offset)
   {
@@ -71,6 +72,7 @@ void renderer_render(game_renderer * rnd, world_state * state){
     if(pl == NULL) return;
     for(size_t i = 0; i < pl->cnt; i++){
       vec3 offset = _offset;
+      if(offset.y > 28) continue;
       entity_header * payload = pl->entity[pl->cnt - i - 1];
       texture_asset * asset = NULL;
       if(payload->type == OBJECT){
@@ -103,9 +105,13 @@ void renderer_render(game_renderer * rnd, world_state * state){
       SDL_RenderCopy(rnd->renderer, asset->texture, &rec2, &rec);
     }
   }
-
-  oct_render_node(start_node, size * base_size, vec3_scale(offset, base_size), render_fcn);
- 
+  for(int k = -3; k <= 0; k++)
+    for(int i = -2; i <= 2; i++)
+      for(int j = 2; j >= -2; j--){
+	oct_node * sn1 = oct_get_relative(start_node, (vec3i){j, k, i});
+	vec3 offset_sn1 = vec3_add(offset, vec3mk(size * j, size * k, size * i));
+	oct_render_node(sn1, size * base_size, vec3_scale(offset_sn1, base_size), render_fcn);
+      }
   SDL_RenderPresent(rnd->renderer);  
 }
 

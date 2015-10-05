@@ -92,7 +92,7 @@ int main(){
   }
   oct_lookup_blocks(n1, vec3mk(0.0, 0.0, 0.0), vec3mk(2.0,2.0,1.0), collision_node);
 
-  game_renderer * rnd2 = renderer_load(600, 600, 28);
+  game_renderer * rnd2 = renderer_load(500, 500, 28);
   world_state state = { n1 };
   texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
   texture_asset * tile25 = renderer_load_texture(rnd2, "../racket_octree/tile7.png");
@@ -112,7 +112,7 @@ int main(){
   texture_asset_set_offset(tile1, vec2mk(0, -23));
   texture_asset_set_offset(rock_small, vec2mk(0, -19));
   texture_asset_set_offset(guy, vec2mk(0, -70));
-  texture_asset_set_offset(guyupper, vec2mk(0, -40));
+  texture_asset_set_offset(guyupper, vec2mk(0, -42));
   texture_asset_set_size(guyupper, (vec2i){40, 40});
   
   for(int j = 0; j < 10; j++)
@@ -144,6 +144,9 @@ int main(){
 	insert_tile(n1, vec3i_make(i+1, 1, j+1), tile5);
 	if(rand() % 10 == 0)
 	  insert_tile(n1, vec3i_make(i, 2, j), tile5);
+      }else if(rand() % 20 == 0){
+	for(int k = 0 ; k < rand() % 20; k++)
+	  insert_tile(n1, vec3i_make(i, 1 + k, j), tile5);
       }
     }
   //entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), tile1);
@@ -223,35 +226,15 @@ int main(){
       for(size_t i = 0; i < lst->cnt; i++)
 	collision |= lst->entity[i]->type == TILE;
     }
-    bool c1 = false, c2 = false;
     oct_lookup_blocks(n->node, newoffset, n->size, check_collision);
-    c1 = collision;
-    collision = false;
     oct_lookup_blocks(n_2->node, newoffset, n_2->size, check_collision);
-    c2 = collision;
-    collision = c1 | c2;
-    logd("c2: %i %i\n", c1, c2);    
+
     if(!collision){
       n->offset = newoffset;
       n_2->offset = newoffset;
-      //oct_node * old = n->node;
-      //oct_node * o2 = n_2->node;
-      //oct_node * o3 = n_3->node;
       update_entity(n); 
       update_entity(n_2);
-      /*      if(old != n->node){
-	remove_entity((entity_header *) n_2);
-	remove_entity((entity_header *) n_3);
-	remove_entity((entity_header *) n_4);
-	add_entity(old,(entity_header *)  n_2);
-	add_entity(o2,(entity_header *)  n_3);
-	add_entity(o3,(entity_header *)  n_4);
-	}*/
     }
-
-    //update_entity(n_2);
-
- 
     oct_clean_tree(oct_get_nth_super(n->node, 5));
     state.center_node = n->node; //oct_get_super(n->node);//oct_get_nth_super(n1,10);
     usleep(100000);
