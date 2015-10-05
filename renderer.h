@@ -6,9 +6,9 @@ game_renderer * renderer_load(int width, int height);
 void renderer_render(game_renderer * renderer, world_state * gamestate);
 u32 renderer_read_events(event * buffer, u32 buffer_size);
 texture_asset * renderer_load_texture(game_renderer * renderer, const char * path);
-
+texture_asset * renderer_clone_texture(texture_asset * asset);
 void texture_asset_set_offset(texture_asset * asset, vec2 offset);
-vec2 texture_asset_get_offset(texture_asset * asset);
+void texture_asset_set_size(texture_asset * asset, vec2i size);
 
 typedef struct _game_controller_state{
   // gamepad: 2 Left Joystick, 2 right joystick, 1 LT, 1 RT.

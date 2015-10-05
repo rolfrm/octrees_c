@@ -35,6 +35,7 @@ struct _game_renderer{
 struct _texture_asset{
   SDL_Texture * texture;
   vec2 offset;
+  vec2i size;
 };
 
 static bool sdl_inited = false;
@@ -94,7 +95,8 @@ void renderer_render(game_renderer * rnd, world_state * state){
       int access;
       u32 format;
       SDL_QueryTexture(asset->texture, &format, &access, &rec.w, &rec.h);
-      SDL_SetTextureBlendMode(asset->texture, SDL_BLENDMODE_BLEND);
+      rec.w = MIN(rec.w, asset->size.x);
+      rec.y = MIN(rec.y, asset->size.y);      
       SDL_RenderCopy(rnd->renderer, asset->texture, NULL, &rec);
     }
   }
@@ -134,29 +136,34 @@ static int get_pixel_format(int channels){
 
 #include "image.h"
 texture_asset * renderer_load_texture(game_renderer * rnd, const char * path){
-  int w,h,c;
-  char * im_data = stbi_load((char *)path, &w, &h, &c,4);
+  int c;
+  vec2i size;
+  vec2 offset = vec2mk(0, 0);
+  char * im_data = stbi_load((char *)path, &size.x, &size.y, &c,4);
   SDL_Texture * tex = SDL_CreateTexture(rnd->renderer, get_pixel_format(c), 
-					SDL_TEXTUREACCESS_STATIC, w, h);
-  SDL_UpdateTexture(tex, NULL, im_data, w * c);
+					SDL_TEXTUREACCESS_STATIC, size.x, size.y);
+  SDL_UpdateTexture(tex, NULL, im_data, size.x * c);
+  SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
   texture_asset * texasset = alloc(sizeof(texasset));
-  *texasset = (texture_asset) {tex, vec2mk(0,0)};
+  *texasset = (texture_asset) {tex, offset , size};
   return texasset;
 }
 
+texture_asset * renderer_clone_texture(texture_asset * asset){
+  texture_asset * cloned = clone(asset, sizeof(texture_asset));  
+  return cloned;
+}
 void texture_asset_set_offset(texture_asset * asset, vec2 offset){
   asset->offset = offset;
 }
 
-vec2 texture_asset_get_offset(texture_asset * asset){
-  return asset->offset;
+void texture_asset_set_size(texture_asset * asset, vec2i size){
+  asset->size = size;
 }
 
- 
 void renderer_delete_asset(texture_asset * asset){
   UNUSED(asset);
 }
-
 
 game_controller_state renderer_game_controller(){
   game_controller_state gc;

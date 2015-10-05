@@ -2,6 +2,10 @@ typedef struct{
   int x, y, z;
 }vec3i;
 
+typedef struct{
+  int x, y;
+}vec2i;
+
 vec3i vec3i_make(int x, int y, int z);
 vec3i vec3i_add(vec3i a, vec3i b);
 vec3i vec3i_bitand(vec3i a, vec3i b);

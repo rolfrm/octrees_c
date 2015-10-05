@@ -100,6 +100,7 @@ int main(){
   texture_asset * tile1 = renderer_load_texture(rnd2, "../racket_octree/tile1.png");
   //  texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy2.png");
   texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy3.png");
+  texture_asset * guyupper = renderer_clone_texture(guy);
   texture_asset * tile4 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
   texture_asset * tile5 = renderer_load_texture(rnd2, "../racket_octree/tile8.png");
   texture_asset * rock_small = renderer_load_texture(rnd2, "../racket_octree/rock_small.png");
@@ -111,6 +112,9 @@ int main(){
   texture_asset_set_offset(tile1, vec2mk(0, -23));
   texture_asset_set_offset(rock_small, vec2mk(0, -19));
   texture_asset_set_offset(guy, vec2mk(0, -60));
+  texture_asset_set_offset(guyupper, vec2mk(0, -60));
+  texture_asset_set_size(guyupper, (vec2i){0, 40});
+  
   for(int j = 0; j < 10; j++)
     for(int i = 0; i < j; i++)
       insert_tile(oct_get_sub(n1,0), vec3i_make(0, 2 + i, -2 - j), rock_small);
@@ -145,9 +149,11 @@ int main(){
   //entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), tile1);
   //entity * n = insert_entity(oct_get_sub(n1,0), vec3mk(0, 3, 0), vec3mk(1, 1, 1), tile1)
   entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), guy);
-  entity * n_2 = insert_entity(n1, vec3mk(-1, 1, 0), vec3mk(1, 1, 1),guy);
-  entity * n_3 = insert_entity(n1, vec3mk(-2, 1, 0), vec3mk(1, 1, 1), guy);
-  entity * n_4 = insert_entity(n1, vec3mk(-3, 1, 0), vec3mk(1, 1, 1), guy);
+  entity * n_2 = insert_entity(n1, vec3mk(0, 2, 0), vec3mk(1, 1, 1), guyupper);
+  UNUSED(n_2);
+  //entity * n_2 = insert_entity(n1, vec3mk(-1, 1, 0), vec3mk(1, 1, 1),guy);
+  //entity * n_3 = insert_entity(n1, vec3mk(-2, 1, 0), vec3mk(1, 1, 1), guy);
+  //entity * n_4 = insert_entity(n1, vec3mk(-3, 1, 0), vec3mk(1, 1, 1), guy);
   while(true){
     {
       for(int i = -1; i < 2; i++)
@@ -219,18 +225,18 @@ int main(){
     
     if(!collision){
       n->offset = newoffset;
-      oct_node * old = n->node;
-      oct_node * o2 = n_2->node;
-      oct_node * o3 = n_3->node;
+      //oct_node * old = n->node;
+      //oct_node * o2 = n_2->node;
+      //oct_node * o3 = n_3->node;
       update_entity(n);
-      if(old != n->node){
+      /*      if(old != n->node){
 	remove_entity((entity_header *) n_2);
 	remove_entity((entity_header *) n_3);
 	remove_entity((entity_header *) n_4);
 	add_entity(old,(entity_header *)  n_2);
 	add_entity(o2,(entity_header *)  n_3);
 	add_entity(o3,(entity_header *)  n_4);
-      }
+	}*/
     }
 
     //update_entity(n_2);
