@@ -49,7 +49,7 @@ game_renderer * renderer_load(int width, int height, int unit_size){
   rnd->window = SDL_CreateWindow("--", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, 
 				 SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
   rnd->renderer = SDL_CreateRenderer(rnd->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-  rnd->unit_size = 28;
+  rnd->unit_size = unit_size;
   return rnd;
 }
 
@@ -97,11 +97,12 @@ void renderer_render(game_renderer * rnd, world_state * state){
       int access;
       u32 format;
       SDL_QueryTexture(asset->texture, &format, &access, &rec.w, &rec.h);
-      rec.w = MIN(rec.w, asset->size.x);
-      rec.h = MIN(rec.h, asset->size.y);      
-      SDL_RenderCopy(rnd->renderer, asset->texture, NULL, &rec);
+      SDL_Rect rec2 = {0,0,MIN(rec.w, asset->size.x),MIN(rec.h, asset->size.y)};
+      rec.w = rec2.w;
+      rec.h = rec2.h;
+      SDL_RenderCopy(rnd->renderer, asset->texture, &rec2, &rec);
     }
-  }e
+  }
 
   oct_render_node(start_node, size * base_size, vec3_scale(offset, base_size), render_fcn);
  

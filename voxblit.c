@@ -92,7 +92,7 @@ int main(){
   }
   oct_lookup_blocks(n1, vec3mk(0.0, 0.0, 0.0), vec3mk(2.0,2.0,1.0), collision_node);
 
-  game_renderer * rnd2 = renderer_load(600, 600);
+  game_renderer * rnd2 = renderer_load(600, 600, 28);
   world_state state = { n1 };
   texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
   texture_asset * tile25 = renderer_load_texture(rnd2, "../racket_octree/tile7.png");
@@ -111,9 +111,9 @@ int main(){
   texture_asset_set_offset(tile3, vec2mk(0, - 77));
   texture_asset_set_offset(tile1, vec2mk(0, -23));
   texture_asset_set_offset(rock_small, vec2mk(0, -19));
-  texture_asset_set_offset(guy, vec2mk(0, -60));
-  texture_asset_set_offset(guyupper, vec2mk(0, -60));
-  texture_asset_set_size(guyupper, (vec2i){0, 40});
+  texture_asset_set_offset(guy, vec2mk(0, -70));
+  texture_asset_set_offset(guyupper, vec2mk(0, -40));
+  texture_asset_set_size(guyupper, (vec2i){40, 40});
   
   for(int j = 0; j < 10; j++)
     for(int i = 0; i < j; i++)
@@ -192,7 +192,7 @@ int main(){
       add_entity(nodes[i], (entity_header *) &sat[i]);
     }
     UNUSED(state);
-    //renderer_render(rnd2, &state);
+    renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     game_controller_state gcs = renderer_game_controller();
