@@ -155,7 +155,7 @@ int main(){
   //entity * n_3 = insert_entity(n1, vec3mk(-2, 1, 0), vec3mk(1, 1, 1), guy);
   //entity * n_4 = insert_entity(n1, vec3mk(-3, 1, 0), vec3mk(1, 1, 1), guy);
   while(true){
-    {
+    if(false){
       for(int i = -1; i < 2; i++)
 	for(int j = -1; j < 2; j++)
 	  for(int k = -1; k < 2; k++)
@@ -181,7 +181,7 @@ int main(){
       if(oct_get_payload(oc) != NULL){ 
 	logd("Payload \n");
 	return;
-
+	
       }
       nodes[cnt] = oc;
       sat[cnt++] = (satelite){SATELITE, NULL, pos,n};
@@ -192,7 +192,7 @@ int main(){
       add_entity(nodes[i], (entity_header *) &sat[i]);
     }
     UNUSED(state);
-    renderer_render(rnd2, &state);
+    //renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     game_controller_state gcs = renderer_game_controller();
@@ -218,17 +218,27 @@ int main(){
     bool collision = false;
     void check_collision(oct_node * oc, vec3 pos, vec3 size){
       UNUSED(pos);UNUSED(size);
-      collision |= oc != n->node && oct_get_payload(oc);
+      entity_list * lst = oct_get_payload(oc);
+      if(lst == NULL) return;
+      for(size_t i = 0; i < lst->cnt; i++)
+	collision |= lst->entity[i]->type == TILE;
     }
-    
+    bool c1 = false, c2 = false;
     oct_lookup_blocks(n->node, newoffset, n->size, check_collision);
-    
+    c1 = collision;
+    collision = false;
+    oct_lookup_blocks(n_2->node, newoffset, n_2->size, check_collision);
+    c2 = collision;
+    collision = c1 | c2;
+    logd("c2: %i %i\n", c1, c2);    
     if(!collision){
       n->offset = newoffset;
+      n_2->offset = newoffset;
       //oct_node * old = n->node;
       //oct_node * o2 = n_2->node;
       //oct_node * o3 = n_3->node;
-      update_entity(n);
+      update_entity(n); 
+      update_entity(n_2);
       /*      if(old != n->node){
 	remove_entity((entity_header *) n_2);
 	remove_entity((entity_header *) n_3);

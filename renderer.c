@@ -30,6 +30,7 @@ static vec2 iso_offset(vec3 v){
 struct _game_renderer{
   SDL_Window * window;
   SDL_Renderer * renderer;
+  int unit_size;
 };
 
 struct _texture_asset{
@@ -39,7 +40,7 @@ struct _texture_asset{
 };
 
 static bool sdl_inited = false;
-game_renderer * renderer_load(int width, int height){
+game_renderer * renderer_load(int width, int height, int unit_size){
   if(!sdl_inited){
     SDL_Init(SDL_INIT_VIDEO);
     sdl_inited = true;
@@ -48,6 +49,7 @@ game_renderer * renderer_load(int width, int height){
   rnd->window = SDL_CreateWindow("--", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, 
 				 SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
   rnd->renderer = SDL_CreateRenderer(rnd->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  rnd->unit_size = 28;
   return rnd;
 }
 
@@ -96,10 +98,10 @@ void renderer_render(game_renderer * rnd, world_state * state){
       u32 format;
       SDL_QueryTexture(asset->texture, &format, &access, &rec.w, &rec.h);
       rec.w = MIN(rec.w, asset->size.x);
-      rec.y = MIN(rec.y, asset->size.y);      
+      rec.h = MIN(rec.h, asset->size.y);      
       SDL_RenderCopy(rnd->renderer, asset->texture, NULL, &rec);
     }
-  }
+  }e
 
   oct_render_node(start_node, size * base_size, vec3_scale(offset, base_size), render_fcn);
  
