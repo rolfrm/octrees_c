@@ -63,6 +63,23 @@ void game_data_add_sprite(game_data * gd, texture_asset * sprite){
   gd->sprites[old_cnt] = sprite;
 }
 
+enum{
+  GD_GRASSY = 0,
+  GD_ROCK = 1,
+  GD_DIRT = 2,
+  GD_ROCK_SMALL = 3,
+  GD_TREE_1 = 7,
+  GD_TREE_2 = 8,
+  GD_TREE_3 = 9,
+  GD_FOILAGE = 10
+};
+
+enum{
+  GD_GUY = 0,
+  GD_GUY_UPPER = 1,
+
+};
+
 // lod_offset: how much above nominal LOD this node is. 
 void load_node(oct_node * node, game_data * game_data, int lod_offset){
   if(ht_lookup(game_data->loaded_nodes, &node))
@@ -76,8 +93,19 @@ void load_node(oct_node * node, game_data * game_data, int lod_offset){
     size *= 2;
   }
   for(int i = 0; i < size; i++)
-    for(int j = 0; j < size; j++)
+    for(int j = 0; j < size; j++){
       insert_tile(node, vec3i_make(i, 0, j), game_data->tiles[rand()&1]);
+      if(rand() % 16 == 0){
+	insert_tile(node, vec3i_make(i, 1, j), game_data->tiles[GD_TREE_1]);
+	insert_tile(node, vec3i_make(i, 2, j), game_data->tiles[GD_TREE_2]);
+	insert_tile(node, vec3i_make(i, 3, j), game_data->tiles[GD_TREE_3]);
+	for(int k1 = -1; k1 <= 1; k1++)
+	  for(int k2 = -1; k2 <= 1; k2++)
+	    insert_tile(node, vec3i_make(i + k1, 4, j + k2), game_data->tiles[GD_FOILAGE]);
+	insert_tile(node, vec3i_make(i, 5, j), game_data->tiles[GD_FOILAGE]);
+      }
+	
+    }
   /*
   for(int j = 0; j < 10; j++)
     for(int i = 0; i < j; i++)
@@ -116,17 +144,6 @@ void load_node(oct_node * node, game_data * game_data, int lod_offset){
   */
 }
 
-enum{
-  GD_GRASSY = 0,
-  GD_ROCK = 1,
-  GD_DIRT = 2,
-  GD_ROCK_SMALL = 3
-};
-
-enum{
-  GD_GUY = 0,
-  GD_GUY_UPPER = 1
-};
 game_data * load_game_data(game_renderer * rnd2){
   game_data * gd = alloc0(sizeof(game_data));
 
@@ -140,16 +157,24 @@ game_data * load_game_data(game_renderer * rnd2){
   texture_asset * tile4 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
   texture_asset * tile5 = renderer_load_texture(rnd2, "../racket_octree/tile8.png");
   texture_asset * rock_small = renderer_load_texture(rnd2, "../racket_octree/rock_small.png");
+  texture_asset * tree1 = renderer_load_texture(rnd2, "../racket_octree/tree1.png");
+  texture_asset * tree2 = renderer_load_texture(rnd2, "../racket_octree/tree2.png");
+  texture_asset * tree3 = renderer_load_texture(rnd2, "../racket_octree/tree3.png");
+  texture_asset * foilage = renderer_load_texture(rnd2, "../racket_octree/foilage.png");
   texture_asset_set_offset(tile22, vec2mk(0, -42));
   texture_asset_set_offset(tile25, vec2mk(0, -42));
   texture_asset_set_offset(tile5, vec2mk(0, -42));
-  texture_asset_set_offset(tile4, vec2mk(0, -42));
+  texture_asset_set_offset(tile4, vec2mk(0, -42));  
   texture_asset_set_offset(tile3, vec2mk(0, - 77));
   texture_asset_set_offset(tile1, vec2mk(0, -23));
   texture_asset_set_offset(rock_small, vec2mk(0, -19));
   texture_asset_set_offset(guy, vec2mk(0, -70));
   texture_asset_set_offset(guyupper, vec2mk(0, -42));
   texture_asset_set_size(guyupper, (vec2i){40, 40});
+  texture_asset_set_offset(tree1, vec2mk(0, -42));
+  texture_asset_set_offset(tree2, vec2mk(0, -42));
+  texture_asset_set_offset(tree3, vec2mk(0, -42));
+  texture_asset_set_offset(foilage, vec2mk(0, -42));
   game_data_add_tile(gd, tile22);
   game_data_add_tile(gd, tile25);
   game_data_add_tile(gd, tile3);
@@ -157,8 +182,13 @@ game_data * load_game_data(game_renderer * rnd2){
   game_data_add_tile(gd, tile4);
   game_data_add_tile(gd, tile5);
   game_data_add_tile(gd, rock_small);
+  game_data_add_tile(gd, tree1);
+  game_data_add_tile(gd, tree2);
+  game_data_add_tile(gd, tree3);
+  game_data_add_tile(gd, foilage);
   game_data_add_sprite(gd, guy);
   game_data_add_sprite(gd, guyupper);
+
   gd->loaded_nodes = ht_create(1024, 8, 4);
   
   return gd;
@@ -175,10 +205,10 @@ int main(){
   entity * n_2 = insert_entity(n1, vec3mk(0, 2, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
   while(true){
     
-    oct_node * super_1 = oct_get_nth_super(n->node, 2);
+    oct_node * super_1 = oct_get_nth_super(n->node, 4);
     for(int i = -3; i <= 3; i++)
       for(int j = -3; j <= 3; j++)
-	load_node(oct_get_relative(super_1, (vec3i){i,0,j}), gd, 2);
+	load_node(oct_get_relative(super_1, (vec3i){i,0,j}), gd, 4);
     UNUSED(state);
     renderer_render(rnd2, &state);
     event evt[32];
@@ -222,7 +252,7 @@ int main(){
     }
     oct_clean_tree(oct_get_nth_super(n->node, 5));
     state.center_node = n->node;
-    usleep(100000);
+    //usleep(100000);
   }
     
   return 0;
