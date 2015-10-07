@@ -29,3 +29,5 @@ oct_node * oct_find_fitting_node(oct_node * node, vec3 * io_position, vec3 * io_
 
 // Deletes all nodes with no payload.
 void oct_clean_tree(oct_node * node);
+
+vec3 oct_node_offset(oct_node * a, oct_node * b);

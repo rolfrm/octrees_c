@@ -184,3 +184,36 @@ static bool rec_clean(oct_node * node){
 void oct_clean_tree(oct_node * node){
   rec_clean(node);
 }
+
+oct_node * find_common_super(oct_node * a, oct_node * b){
+  oct_node * asupers[64]; // Max size: 2 ** 64, enough?
+  oct_node * bsupers[64];
+  int acnt = 0, bcnt = 0;
+  for(int i = 0; i < 2; i++){
+    oct_node * seek = i ? a : b;
+    oct_node ** array = i ? asupers : bsupers;
+    int * counter = i ? &acnt : &bcnt;
+    for(; *counter < 64; (*counter)++){
+      if(seek == NULL) break;
+      array[*counter] = seek;
+      seek = oct_peek_super(seek);
+    }
+  }
+  acnt--;
+  bcnt--;
+  ASSERT(acnt < 64 && bcnt < 64);
+  for(;acnt >= 0 && bcnt >= 0; --acnt, --bcnt){
+    if(asupers[acnt] != bsupers[bcnt])
+      return asupers[acnt + 1];
+  }
+  UNREACHABLE();
+  return NULL;
+}
+
+vec3 oct_node_offset(oct_node * a, oct_node * b){
+  oct_node * super = find_common_super(a, b);
+  logd("SUper: %i\n", super);
+  vec3 offset_a = oct_get_super_offset(a, super);
+  vec3 offset_b = oct_get_super_offset(b, super);
+  return vec3_sub(offset_b, offset_a);
+}

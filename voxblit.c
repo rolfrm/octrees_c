@@ -203,14 +203,16 @@ int main(){
   
   entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
   entity * n_2 = insert_entity(n1, vec3mk(0, 2, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
+  vec3 cpos = vec3mk(0, 0, 0);
   while(true){
-    
-    oct_node * super_1 = oct_get_nth_super(n->node, 4);
+    vec3 offset = oct_node_offset(n1, n->node);
+    logd("Offset: "); vec3_print(offset);logd("\n");
+    oct_node * super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-cpos.y, 0}), 4);
     for(int i = -3; i <= 3; i++)
       for(int j = -3; j <= 3; j++)
-	load_node(oct_get_relative(super_1, (vec3i){i,0,j}), gd, 4);
+	load_node(oct_get_relative(super_1, (vec3i){i, 0, j}), gd, 4);
     UNUSED(state);
-    renderer_render(rnd2, &state);
+    //renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     game_controller_state gcs = renderer_game_controller();
@@ -225,7 +227,7 @@ int main(){
       }
 
     game_controller_state_print(gcs);logd("\n");
-    
+    vec3_print(cpos);logd("\n");
     vec3 mv = vec3mk(gcs.axes[0] * 1, gcs.axes[3] * 1, gcs.axes[1] * 1);
     vec3 newoffset = vec3_add(n->offset, mv);
     bool collision = false;
@@ -242,7 +244,7 @@ int main(){
     if(!collision){
       oct_node * _n = n->node;
       oct_node * _n2 = n_2->node;
-      
+      cpos = vec3_add(cpos, newoffset);
       n->offset = newoffset;
       n_2->offset = newoffset;
       remove_entity((entity_header *) n);
@@ -252,7 +254,7 @@ int main(){
     }
     oct_clean_tree(oct_get_nth_super(n->node, 5));
     state.center_node = n->node;
-    //usleep(100000);
+    usleep(100000);
   }
     
   return 0;
