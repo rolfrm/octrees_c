@@ -77,6 +77,7 @@ enum{
 enum{
   GD_GUY = 0,
   GD_GUY_UPPER = 1,
+  GD_FIREPLACE = 2
 
 };
 
@@ -103,8 +104,10 @@ void load_node(oct_node * node, game_data * game_data, int lod_offset){
 	  for(int k2 = -1; k2 <= 1; k2++)
 	    insert_tile(node, vec3i_make(i + k1, 4, j + k2), game_data->tiles[GD_FOILAGE]);
 	insert_tile(node, vec3i_make(i, 5, j), game_data->tiles[GD_FOILAGE]);
-      }
-	
+      }else if(rand() % 128 == 0){
+	insert_entity(node, vec3mk(i, 1, j), vec3mk(1, 1, 1), game_data->sprites[GD_FIREPLACE]);
+      }else if(rand() % 128 == 0)
+	insert_tile(node, vec3i_make(i, 1, j), game_data->tiles[5]);
     }
   /*
   for(int j = 0; j < 10; j++)
@@ -161,6 +164,7 @@ game_data * load_game_data(game_renderer * rnd2){
   texture_asset * tree2 = renderer_load_texture(rnd2, "../racket_octree/tree2.png");
   texture_asset * tree3 = renderer_load_texture(rnd2, "../racket_octree/tree3.png");
   texture_asset * foilage = renderer_load_texture(rnd2, "../racket_octree/foilage.png");
+  texture_asset * fireplace = renderer_load_texture(rnd2, "../racket_octree/fireplace.png");
   texture_asset_set_offset(tile22, vec2mk(0, -42));
   texture_asset_set_offset(tile25, vec2mk(0, -42));
   texture_asset_set_offset(tile5, vec2mk(0, -42));
@@ -175,6 +179,7 @@ game_data * load_game_data(game_renderer * rnd2){
   texture_asset_set_offset(tree2, vec2mk(0, -42));
   texture_asset_set_offset(tree3, vec2mk(0, -42));
   texture_asset_set_offset(foilage, vec2mk(0, -42));
+  texture_asset_set_offset(fireplace, vec2mk(0, -42));
   game_data_add_tile(gd, tile22);
   game_data_add_tile(gd, tile25);
   game_data_add_tile(gd, tile3);
@@ -188,7 +193,7 @@ game_data * load_game_data(game_renderer * rnd2){
   game_data_add_tile(gd, foilage);
   game_data_add_sprite(gd, guy);
   game_data_add_sprite(gd, guyupper);
-
+  game_data_add_sprite(gd, fireplace);
   gd->loaded_nodes = ht_create(1024, 8, 4);
   
   return gd;
