@@ -1,4 +1,4 @@
-OPT = -g0 -O4
+OPT = -g3 -O0
 SOURCES =  voxblit.c ../iron/linmath.c ../iron/utils.c ../iron/mem.c ../iron/fileio.c ../iron/array.c ../iron/math.c ../iron/time.c ../iron/hashtable.c ../iron/log.c oct_node.c vec3i.c octree.c event.c renderer.c sdl_event.c image.c game_state.c
 CC = gcc
 TARGET = run.exe

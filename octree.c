@@ -186,6 +186,9 @@ void oct_clean_tree(oct_node * node){
 }
 
 oct_node * find_common_super(oct_node * a, oct_node * b){
+  if(a == b)
+    return oct_peek_super(a);
+
   oct_node * asupers[64]; // Max size: ~2^64, enough? too much to push 2x64 pointers on the stack?
   oct_node * bsupers[64];
   size_t acnt = 0, bcnt = 0;
@@ -218,6 +221,7 @@ oct_node * find_common_super(oct_node * a, oct_node * b){
 }
 
 vec3 oct_node_offset(oct_node * a, oct_node * b){
+  ASSERT(a != NULL);ASSERT(b != NULL);
   oct_node * super = find_common_super(a, b);
   vec3 offset_a = oct_get_super_offset(a, super);
   vec3 offset_b = oct_get_super_offset(b, super);

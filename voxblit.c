@@ -201,19 +201,19 @@ int main(){
   world_state state = { n1 };
   game_data * gd = load_game_data(rnd2);
   
-  entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
-  entity * n_2 = insert_entity(n1, vec3mk(0, 2, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
+  entity * n = insert_entity(n1, vec3mk(1, 1, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
+  entity * n_2 = insert_entity(n1, vec3mk(1, 2, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
   entity * n_3 = insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
   UNUSED(n_3);
   while(true){
     vec3 offset = oct_node_offset(n_2->node, n1);
     logd("Offset: "); vec3_print(offset);logd("\n");
-    oct_node * super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-offset.y, 0}), 4);
-    for(int i = -3; i <= 3; i++)
-      for(int j = -3; j <= 3; j++)
-	load_node(oct_get_relative(super_1, (vec3i){i, 0, j}), gd, 4);
+    oct_node * super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-offset.y, 0}), 2);
+    for(int i = -1; i <= 1; i++)
+      for(int j = -1; j <= 1; j++)
+	load_node(oct_get_relative(super_1, (vec3i){i, 0, j}), gd, 2);
     UNUSED(state);
-    //renderer_render(rnd2, &state);
+    renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     game_controller_state gcs = renderer_game_controller();
@@ -263,6 +263,15 @@ int main(){
       }
     }else{
       // handle gravity.
+      oct_node * _n = n->node;
+      oct_node * _n2 = n_2->node;
+      vec3 newoffset = vec3_add(n->offset, vec3mk(0, -1, 0));
+      n->offset = newoffset;
+      n_2->offset = newoffset;
+      remove_entity((entity_header *) n);
+      remove_entity((entity_header *) n_2);
+      add_entity(oct_find_fitting_node(_n, &n->offset, &n->size), (entity_header *) n);
+      add_entity(oct_find_fitting_node(_n2, &n_2->offset, &n_2->size), (entity_header *) n_2);
     }
     oct_clean_tree(oct_get_nth_super(n->node, 5));
     state.center_node = n->node;
