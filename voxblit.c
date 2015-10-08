@@ -203,11 +203,12 @@ int main(){
   
   entity * n = insert_entity(n1, vec3mk(0, 1, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
   entity * n_2 = insert_entity(n1, vec3mk(0, 2, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
-  vec3 cpos = vec3mk(0, 0, 0);
+  entity * n_3 = insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
+  UNUSED(n_3);
   while(true){
-    vec3 offset = oct_node_offset(n1, n->node);
+    vec3 offset = oct_node_offset(n_2->node, n1);
     logd("Offset: "); vec3_print(offset);logd("\n");
-    oct_node * super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-cpos.y, 0}), 4);
+    oct_node * super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-offset.y, 0}), 4);
     for(int i = -3; i <= 3; i++)
       for(int j = -3; j <= 3; j++)
 	load_node(oct_get_relative(super_1, (vec3i){i, 0, j}), gd, 4);
@@ -225,32 +226,43 @@ int main(){
       default:
 	continue;
       }
-
+    
     game_controller_state_print(gcs);logd("\n");
-    vec3_print(cpos);logd("\n");
-    vec3 mv = vec3mk(gcs.axes[0] * 1, gcs.axes[3] * 1, gcs.axes[1] * 1);
-    vec3 newoffset = vec3_add(n->offset, mv);
-    bool collision = false;
-    void check_collision(oct_node * oc, vec3 pos, vec3 size){
-      UNUSED(pos);UNUSED(size);
-      entity_list * lst = oct_get_payload(oc);
-      if(lst == NULL) return;
-      for(size_t i = 0; i < lst->cnt; i++)
-	collision |= lst->entity[i]->type == TILE;
+    entity_list * el = oct_get_payload(oct_get_relative(n->node, (vec3i){0, -1, 0}));
+    bool standing_on_ground = false;
+    if(el != NULL){
+      for(size_t i = 0; i < el->cnt; i++)
+	if(el->entity[i]->type == TILE)
+	  standing_on_ground = true;
     }
-    oct_lookup_blocks(n->node, newoffset, n->size, check_collision);
-    oct_lookup_blocks(n_2->node, newoffset, n_2->size, check_collision);
-
-    if(!collision){
-      oct_node * _n = n->node;
-      oct_node * _n2 = n_2->node;
-      cpos = vec3_add(cpos, newoffset);
-      n->offset = newoffset;
-      n_2->offset = newoffset;
-      remove_entity((entity_header *) n);
-      remove_entity((entity_header *) n_2);
-      add_entity(oct_find_fitting_node(_n, &n->offset, &n->size), (entity_header *) n);
-      add_entity(oct_find_fitting_node(_n2, &n_2->offset, &n_2->size), (entity_header *) n_2);
+    if(standing_on_ground){
+      vec3 mv = vec3mk(gcs.axes[0] * 1, gcs.axes[3] * 1, gcs.axes[1] * 1);
+      vec3 newoffset = vec3_add(n->offset, mv);
+      bool collision = false;
+      
+      void check_collision(oct_node * oc, vec3 pos, vec3 size){
+	UNUSED(pos);UNUSED(size);
+	entity_list * lst = oct_get_payload(oc);
+	if(lst == NULL) return;
+	for(size_t i = 0; i < lst->cnt; i++)
+	  collision |= lst->entity[i]->type == TILE;
+      }
+      oct_lookup_blocks(n->node, newoffset, n->size, check_collision);
+      oct_lookup_blocks(n_2->node, newoffset, n_2->size, check_collision);
+      
+      if(!collision){
+	oct_node * _n = n->node;
+	oct_node * _n2 = n_2->node;
+	
+	n->offset = newoffset;
+	n_2->offset = newoffset;
+	remove_entity((entity_header *) n);
+	remove_entity((entity_header *) n_2);
+	add_entity(oct_find_fitting_node(_n, &n->offset, &n->size), (entity_header *) n);
+	add_entity(oct_find_fitting_node(_n2, &n_2->offset, &n_2->size), (entity_header *) n_2);
+      }
+    }else{
+      // handle gravity.
     }
     oct_clean_tree(oct_get_nth_super(n->node, 5));
     state.center_node = n->node;
