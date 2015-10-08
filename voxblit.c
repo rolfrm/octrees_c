@@ -208,10 +208,10 @@ int main(){
   while(true){
     vec3 offset = oct_node_offset(n_2->node, n1);
     logd("Offset: "); vec3_print(offset);logd("\n");
-    oct_node * super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-offset.y, 0}), 2);
-    for(int i = -1; i <= 1; i++)
-      for(int j = -1; j <= 1; j++)
-	load_node(oct_get_relative(super_1, (vec3i){i, 0, j}), gd, 2);
+    oct_node * super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-offset.y, 0}), 4);
+    for(int i = -4; i <= 4; i++)
+      for(int j = -4; j <= 4; j++)
+	load_node(oct_get_relative(super_1, (vec3i){i, 0, j}), gd, 4);
     UNUSED(state);
     renderer_render(rnd2, &state);
     event evt[32];
