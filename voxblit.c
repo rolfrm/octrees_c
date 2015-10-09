@@ -106,8 +106,12 @@ void load_node(oct_node * node, game_data * game_data, int lod_offset){
 	insert_tile(node, vec3i_make(i, 5, j), game_data->tiles[GD_FOILAGE]);
       }else if(rand() % 128 == 0){
 	insert_entity(node, vec3mk(i, 1, j), vec3mk(1, 1, 1), game_data->sprites[GD_FIREPLACE]);
-      }else if(rand() % 128 == 0)
-	insert_tile(node, vec3i_make(i, 1, j), game_data->tiles[5]);
+      
+      }else if(rand() % 128 == 0){
+	int len = 10;
+	for(int i2 = 0; i2 < len; i2++)
+	  insert_tile(node, vec3i_make(i + i2, 1  + i2, j), game_data->tiles[5]);
+      }
     }
   /*
   for(int j = 0; j < 10; j++)
@@ -252,10 +256,21 @@ int main(){
 	for(size_t i = 0; i < lst->cnt; i++)
 	  collision |= lst->entity[i]->type == TILE;
       }
+      bool bottom_collision, top_collision;
       oct_lookup_blocks(n->node, newoffset, n->size, check_collision);
+      bottom_collision = collision;
+      collision = false;
       oct_lookup_blocks(n_2->node, newoffset, n_2->size, check_collision);
+      top_collision = collision;
+      if(bottom_collision && !top_collision){
+	newoffset = vec3_add(newoffset, vec3mk(0,1,0));
+	collision = false;
+	oct_lookup_blocks(n->node, newoffset, n->size, check_collision);
+	oct_lookup_blocks(n_2->node, newoffset, n->size, check_collision);
+	bottom_collision = false;
+      }
       
-      if(!collision){
+      if(!collision && !bottom_collision){
 	oct_node * _n = n->node;
 	oct_node * _n2 = n_2->node;
 	
