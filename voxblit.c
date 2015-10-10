@@ -48,6 +48,7 @@ typedef struct{
   texture_asset ** sprites;
   int sprite_cnt;
   hash_table * loaded_nodes;
+  hash_table * enemies;
 }game_data;
 
 
@@ -199,8 +200,30 @@ game_data * load_game_data(game_renderer * rnd2){
   game_data_add_sprite(gd, guyupper);
   game_data_add_sprite(gd, fireplace);
   gd->loaded_nodes = ht_create(1024, 8, 4);
-  
+  gd->enemies = ht_create(128, 8, 4);
   return gd;
+}
+
+void update_entities(oct_node * n1, game_data * gd, void (* f)(entity_header * eh, game_data * gd)){
+  void rnd(oct_node * oc, float size, vec3 offset){
+    UNUSED(size);UNUSED(offset);
+    entity_list * lst = oct_get_payload(oc);
+    if(lst == NULL) return;
+    for(size_t i = 0; i < lst->cnt; i++){
+      f(lst->entity[i], gd);
+    }
+  }
+  oct_render_node(n1, 1, vec3mk(0, 0, 0), rnd);
+}
+
+void update_ai(entity_header * eh, game_data * gd){
+  if(eh->type == OBJECT && ht_lookup(gd->enemies, &eh)){
+    int dx = rand() % 3 - 1;
+    //logd("This happens.. %i\n", dx);
+    entity * et = (entity *) eh;
+    et->offset =vec3_add(et->offset, vec3mk(dx, 0, 0));
+    update_entity(et);
+  }
 }
 
 int main(){
@@ -210,17 +233,23 @@ int main(){
   world_state state = { n1 };
   game_data * gd = load_game_data(rnd2);
   
-  entity * n = insert_entity(n1, vec3mk(1, 1, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
-  entity * n_2 = insert_entity(n1, vec3mk(1, 2, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
+  entity * n = insert_entity(n1, vec3mk(1, -4, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
+  entity * n_2 = insert_entity(n1, vec3mk(1, -3, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
   entity * n_3 = insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
+  entity * ne = insert_entity(n1, vec3mk(-5, -4, -5), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
+  int unused_1 = 0;
+  ht_insert(gd->enemies, &ne, &unused_1);
   UNUSED(n_3);
   while(true){
     vec3 offset = oct_node_offset(n_2->node, n1);
     logd("Offset: "); vec3_print(offset);logd("\n");
     oct_node * super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-offset.y, 0}), 4);
     for(int i = -4; i <= 4; i++)
-      for(int j = -4; j <= 4; j++)
-	load_node(oct_get_relative(super_1, (vec3i){i, 0, j}), gd, 4);
+      for(int j = -4; j <= 4; j++){
+	oct_node * r = oct_get_relative(super_1, (vec3i){i, 0, j});
+	load_node(r, gd, 4);
+	//update_entities(oct_get_nth_super(r, 4), gd, update_ai);
+      }
     UNUSED(state);
     renderer_render(rnd2, &state);
     event evt[32];
@@ -244,6 +273,7 @@ int main(){
 	if(el->entity[i]->type == TILE)
 	  standing_on_ground = true;
     }
+    
     if(standing_on_ground){
       vec3 mv = vec3mk(gcs.axes[0] * 1, gcs.axes[3] * 1, gcs.axes[1] * 1);
       vec3 newoffset = vec3_add(n->offset, mv);
