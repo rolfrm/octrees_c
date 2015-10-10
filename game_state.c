@@ -41,7 +41,7 @@ void remove_entity(entity_header * eh){
     oct_set_payload(eh->node, NULL);
     dealloc(ceh);
   }else{
-    ceh->entity = ralloc(ceh->entity, ceh->cnt * sizeof(entity_header *));
+    //ceh->entity = ralloc(ceh->entity, ceh->cnt * sizeof(entity_header *));
   }
   eh->node = NULL;
 }
