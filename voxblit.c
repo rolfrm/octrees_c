@@ -78,7 +78,8 @@ enum{
 enum{
   GD_GUY = 0,
   GD_GUY_UPPER = 1,
-  GD_FIREPLACE = 2
+  GD_FIREPLACE = 2,
+  GD_BUG = 3
 
 };
 
@@ -170,6 +171,7 @@ game_data * load_game_data(game_renderer * rnd2){
   texture_asset * tree3 = renderer_load_texture(rnd2, "../racket_octree/tree3.png");
   texture_asset * foilage = renderer_load_texture(rnd2, "../racket_octree/foilage.png");
   texture_asset * fireplace = renderer_load_texture(rnd2, "../racket_octree/fireplace.png");
+  texture_asset * buggy = renderer_load_texture(rnd2, "../racket_octree/buggy.png");
   texture_asset_set_offset(tile22, vec2mk(0, -42));
   texture_asset_set_offset(tile25, vec2mk(0, -42));
   texture_asset_set_offset(tile5, vec2mk(0, -42));
@@ -179,6 +181,7 @@ game_data * load_game_data(game_renderer * rnd2){
   texture_asset_set_offset(rock_small, vec2mk(0, -19));
   texture_asset_set_offset(guy, vec2mk(0, -70));
   texture_asset_set_offset(guyupper, vec2mk(0, -42));
+  texture_asset_set_offset(buggy, vec2mk(0, -42));
   texture_asset_set_size(guyupper, (vec2i){40, 40});
   texture_asset_set_offset(tree1, vec2mk(0, -42));
   texture_asset_set_offset(tree2, vec2mk(0, -42));
@@ -199,6 +202,7 @@ game_data * load_game_data(game_renderer * rnd2){
   game_data_add_sprite(gd, guy);
   game_data_add_sprite(gd, guyupper);
   game_data_add_sprite(gd, fireplace);
+  game_data_add_sprite(gd, buggy);
   gd->loaded_nodes = ht_create(1024, 8, 4);
   gd->enemies = ht_create(128, 8, 4);
   return gd;
@@ -218,10 +222,49 @@ void update_entities(oct_node * n1, game_data * gd, void (* f)(entity_header * e
 
 void update_ai(entity_header * eh, game_data * gd){
   if(eh->type == OBJECT && ht_lookup(gd->enemies, &eh)){
-    int dx = rand() % 3 - 1;
-    entity * et = (entity *) eh;
-    et->offset =vec3_add(et->offset, vec3mk(dx, 0, 0));
-    update_entity(et);
+    entity * n = (entity *) eh;
+    entity_list * el = oct_get_payload(oct_get_relative(n->node, (vec3i){0, -1, 0}));
+    bool standing_on_ground = false;
+    if(el != NULL){
+      for(size_t i = 0; i < el->cnt; i++)
+	if(el->entity[i]->type == TILE)
+	  standing_on_ground = true;
+    }
+    if(standing_on_ground == false){
+      vec3 newoffset = vec3_add(n->offset, vec3mk(0, -1, 0));
+      bool collision = false;
+      
+      void check_collision(oct_node * oc, vec3 pos, vec3 size){
+	UNUSED(pos);UNUSED(size);
+	entity_list * lst = oct_get_payload(oc);
+	if(lst == NULL) return;
+	for(size_t i = 0; i < lst->cnt; i++)
+	  collision |= lst->entity[i]->type == TILE;
+      }
+      oct_lookup_blocks(n->node, newoffset, n->size, check_collision);
+      if(!collision){
+	n->offset = newoffset;
+	update_entity(n);
+      }
+    }else{
+      int dx = rand() % 3 - 1;
+      int dy = rand() % 3 - 1;
+      vec3 newoffset = vec3_add(n->offset, vec3mk(dx, 0, dy));
+      bool collision = false;
+      
+      void check_collision(oct_node * oc, vec3 pos, vec3 size){
+	UNUSED(pos);UNUSED(size);
+	entity_list * lst = oct_get_payload(oc);
+	if(lst == NULL) return;
+	for(size_t i = 0; i < lst->cnt; i++)
+	  collision |= lst->entity[i]->type == TILE;
+      }
+      oct_lookup_blocks(n->node, newoffset, n->size, check_collision);
+      if(!collision){
+	n->offset = newoffset;
+	update_entity(n);
+      }
+    }
   }
 }
 
@@ -235,7 +278,7 @@ int main(){
   entity * n = insert_entity(n1, vec3mk(1, -4, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
   entity * n_2 = insert_entity(n1, vec3mk(1, -3, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
   entity * n_3 = insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
-  entity * ne = insert_entity(n1, vec3mk(-5, -4, -5), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
+  entity * ne = insert_entity(n1, vec3mk(-5, -4, -5), vec3mk(1, 1, 1), gd->sprites[GD_BUG]);
   int unused_1 = 0;
   ht_insert(gd->enemies, &ne, &unused_1);
   UNUSED(n_3);
@@ -307,15 +350,11 @@ int main(){
       }
     }else{
       // handle gravity.
-      oct_node * _n = n->node;
-      oct_node * _n2 = n_2->node;
       vec3 newoffset = vec3_add(n->offset, vec3mk(0, -1, 0));
       n->offset = newoffset;
       n_2->offset = newoffset;
-      remove_entity((entity_header *) n);
-      remove_entity((entity_header *) n_2);
-      add_entity(oct_find_fitting_node(_n, &n->offset, &n->size), (entity_header *) n);
-      add_entity(oct_find_fitting_node(_n2, &n_2->offset, &n_2->size), (entity_header *) n_2);
+      update_entity(n);
+      update_entity(n_2);
     }
     oct_clean_tree(oct_get_nth_super(n->node, 5));
     state.center_node = n->node;
