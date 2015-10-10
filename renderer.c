@@ -64,7 +64,7 @@ void renderer_render(game_renderer * rnd, world_state * state){
   vec3 offset = oct_get_super_offset(state->center_node, start_node);
   float size = oct_get_super_size(state->center_node, start_node);
 
-  float base_size = 56.0/2;
+ float base_size = 56.0/2;
   void render_fcn(oct_node * n, float s, vec3 _offset)
   {
     UNUSED(s);
@@ -73,7 +73,7 @@ void renderer_render(game_renderer * rnd, world_state * state){
     for(size_t i = 0; i < pl->cnt; i++){
       vec3 offset = _offset;
       if(offset.y > 28) continue;
-      entity_header * payload = pl->entity[pl->cnt - i - 1];
+      entity_header * payload = pl->entity[i];//pl->cnt - i - 1];
       texture_asset * asset = NULL;
       if(payload->type == OBJECT){
 	offset = vec3_add(offset, vec3_scale(((entity *) payload)->offset, s));
@@ -210,4 +210,12 @@ void game_controller_state_print(game_controller_state s){
       logd(", ");
     }
   }
+}
+
+vec2i renderer_get_mouse_position(game_renderer * rnd){
+  int w, h;
+  SDL_GetWindowSize(rnd->window,&w, &h);
+  vec2i o;
+  SDL_GetMouseState(&o.x, &o.y);
+  return (vec2i){o.x - w/2, h/2 - o.y};
 }

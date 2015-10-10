@@ -19,6 +19,9 @@ vec3i vec3i_bitand(vec3i a, vec3i b){
 void vec3i_print(vec3i v){
   logd("(%i %i %i)", v.x, v.y, v.z);
 }
+void vec2i_print(vec2i v){
+  logd("(%i %i)", v.x, v.y);
+}
 
 vec3 vec3i_to_vec3(vec3i v){
   return vec3mk(v.x, v.y, v.z);

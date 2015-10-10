@@ -21,3 +21,5 @@ typedef struct _game_controller_state{
 
 game_controller_state renderer_game_controller();
 void game_controller_state_print(game_controller_state s);
+
+vec2i renderer_get_mouse_position(game_renderer * rnd);

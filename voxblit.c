@@ -81,7 +81,8 @@ enum{
   GD_GUY_UPPER = 1,
   GD_FIREPLACE = 2,
   GD_BUG = 3,
-  GD_CAT = 4
+  GD_CAT = 4,
+  GD_SELECT_CUBE = 5
 
 };
 
@@ -112,11 +113,20 @@ void load_node(oct_node * node, game_data * game_data, int lod_offset){
 	insert_entity(node, vec3mk(i, 1, j), vec3mk(1, 1, 1), game_data->sprites[GD_FIREPLACE]);
       
       }else if(rand() % 2024 == 0){
-	int len = rand() % 10;
+	/*int len = rand() % 10;
 	for(int i2 = 0; i2 < len; i2++)
 	  for(int j2 = 0; j2 < len - i2; j2++)
 	    for(int k2 = 0; k2 < len - i2; k2++)
 	      insert_tile(node, vec3i_make(i + k2 + i2/2, 1  + i2, j + j2 + i2/2), game_data->tiles[5]);
+	*/
+	for(int l = 0; l < 100; l++)
+	  insert_tile(node, vec3i_make(i + l, 1  + l, j), game_data->tiles[5]);
+      }else if(rand() % 2000 == 0){
+	entity * n2 = insert_entity(node, vec3mk(i, 1, j), 
+				    vec3mk(1, 1, 1), 
+				    game_data->sprites[(rand() & 1) == 0 ? GD_BUG : GD_CAT]);
+      int unused_1;
+      ht_insert(game_data->enemies, &n2, &unused_1);
       }
     }
   /*
@@ -177,6 +187,7 @@ game_data * load_game_data(game_renderer * rnd2){
   texture_asset * fireplace = renderer_load_texture(rnd2, "../racket_octree/fireplace.png");
   texture_asset * buggy = renderer_load_texture(rnd2, "../racket_octree/buggy.png");
   texture_asset * cat = renderer_load_texture(rnd2, "../racket_octree/cat.png");
+  texture_asset * select_cube = renderer_load_texture(rnd2, "../racket_octree/select_cube.png");
   texture_asset_set_offset(tile22, vec2mk(0, -42));
   texture_asset_set_offset(tile25, vec2mk(0, -42));
   texture_asset_set_offset(tile5, vec2mk(0, -42));
@@ -188,6 +199,7 @@ game_data * load_game_data(game_renderer * rnd2){
   texture_asset_set_offset(guyupper, vec2mk(0, -42));
   texture_asset_set_offset(buggy, vec2mk(0, -42));
   texture_asset_set_offset(cat, vec2mk(0, -42));
+  texture_asset_set_offset(select_cube, vec2mk(0, -42));
   texture_asset_set_size(guyupper, (vec2i){40, 40});
   texture_asset_set_offset(tree1, vec2mk(0, -42));
   texture_asset_set_offset(tree2, vec2mk(0, -42));
@@ -210,6 +222,7 @@ game_data * load_game_data(game_renderer * rnd2){
   game_data_add_sprite(gd, fireplace);
   game_data_add_sprite(gd, buggy);
   game_data_add_sprite(gd, cat);
+  game_data_add_sprite(gd, select_cube);
   gd->loaded_nodes = ht_create(1024, 8, 4);
   gd->enemies = ht_create(1024, 8, 4);
   return gd;
@@ -307,10 +320,13 @@ void update_ai(entity_header * eh, game_data * gd){
   }
 }
 
-
+static vec3i inv_iso(vec2i p, int y){
+  
+  return (vec3i){(p.x + p.y * 2) / 2,  y,  -(p.y * 2 - p.x) / 2};
+}
 
 int main(){
-
+  int yoff = 0;
   game_renderer * rnd2 = renderer_load(500, 500, 28);
   oct_node * n1 = oct_create();
   world_state state = { n1 };
@@ -320,25 +336,32 @@ int main(){
   entity * n_2 = insert_entity(n1, vec3mk(1, -3, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
   entity * n_3 = insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
   //insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
-  insert_tile(n1, vec3i_make(0, 0, 0), gd->tiles[GD_TREE_1]);
+  tile * orig = insert_tile(n1, vec3i_make(0, 0, 0), gd->tiles[GD_TREE_1]);
   entity * ne = insert_entity(n1, vec3mk(-5, -4, -5), vec3mk(1, 1, 1), gd->sprites[GD_BUG]);
-  int unused_1 = 0;
-  for(int i = 0 ; i < 100; i++){
-    entity * n2 = insert_entity(n1, vec3mk(-7 + (rand() % 10), -4, -7 + (rand() % 10)), vec3mk(1, 1, 1), gd->sprites[(rand() & 1) == 0 ? GD_BUG : GD_CAT]);
-    ht_insert(gd->enemies, &n2, &unused_1);
-  }
-
+  entity * select_cube = insert_entity(n1, vec3mk(-2, -8, -4), vec3mk(1, 1, 1), gd->sprites[GD_SELECT_CUBE]);
+  int unused_1;
   ht_insert(gd->enemies, &ne, &unused_1);
   ht_insert(gd->enemies, &n_3, &unused_1);
   while(true){
-    vec3 offset = oct_node_offset(n_2->node, n1);
-    logd("Offset: "); vec3_print(offset);logd("\n");
+    vec2i p = renderer_get_mouse_position(rnd2);
+    vec2i p2 = (vec2i){p.x / 28, p.y / 28};
+    vec3i p3 =inv_iso(p2, yoff);
+    select_cube->offset = vec3i_to_vec3(p3);
+    remove_entity((entity_header *)select_cube);
+    logd(" +++ "); vec3i_print(p3);logd("\n");
+    oct_node * oc2 = oct_find_fitting_node(n->node, &select_cube->offset, &select_cube->size);
+    add_entity(oc2, (entity_header *) select_cube);
+
+
+    vec3 offset = oct_node_offset(n_2->node, orig->node);
+    logd("Offset: "); vec3_print(offset);vec3_print(n->offset);logd("\n");
     oct_node * super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-offset.y, 0}), 4);
     for(int i = -4; i <= 4; i++)
       for(int j = -4; j <= 4; j++){
 	oct_node * r = oct_get_relative(super_1, (vec3i){i, 0, j});
 	load_node(r, gd, 4);
       }
+    super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, 0, 0}), 4);
     for(int i = -2; i <= 2; i++)
       for(int j = -2; j <= 2; j++){
 	oct_node * r = oct_get_relative(super_1, (vec3i){i, 0, j});
@@ -350,25 +373,38 @@ int main(){
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     gd->controller = renderer_game_controller();
-    for(u32 i = 0; i < event_cnt; i++)
+    for(u32 i = 0; i < event_cnt; i++){
+      oct_node * node1;
+    entity_list * lst;
       switch(evt[i].type){
       case QUIT:
 	return 0;
       case KEY:
 	break;
+      case MOUSE_WHEEL:
+	logd("WHEELS! %i %i\n", evt[i].mouse_wheel.delta_x, evt[i].mouse_wheel.delta_y );
+	yoff = yoff + evt[i].mouse_wheel.delta_y;
+	break;
+      case MOUSE_BUTTON:
+	node1 = select_cube->node;
+	remove_entity((entity_header *)select_cube);
+	while((lst = oct_get_payload(node1)))
+	  remove_entity(lst->entity[0]);
+	add_entity(node1, (entity_header *) select_cube);
+	break;
       default:
 	continue;
       }
-    
+    }
     game_controller_state_print(gd->controller);logd("\n");
     entity_list * el = oct_get_payload(oct_get_relative(n->node, (vec3i){0, -1, 0}));
     bool standing_on_ground = false;
     if(el != NULL){
       for(size_t i = 0; i < el->cnt; i++)
+
 	if(el->entity[i]->type == TILE)
 	  standing_on_ground = true;
     }
-    
     if(standing_on_ground){
       vec3 mv = vec3mk(gd->controller.axes[0] * 1, 
 		       gd->controller.axes[3] * 1, 

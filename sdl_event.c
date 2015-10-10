@@ -210,6 +210,11 @@ event sdl_event_to_event(SDL_Event sdlevt){
   case SDL_QUIT:
     evt.type = QUIT;
     break;
+  case SDL_MOUSEWHEEL:
+    evt.type = MOUSE_WHEEL;
+    mouse_wheel_event evt2 = {sdlevt.wheel.x, sdlevt.wheel.y};
+    evt.mouse_wheel = evt2;
+    break;
   default:
     evt.type = EVENT_UNKNOWN;
   }

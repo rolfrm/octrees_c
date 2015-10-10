@@ -203,6 +203,11 @@ typedef struct{
 }joy_button_event;
 
 typedef struct{
+
+  int delta_x, delta_y;
+}mouse_wheel_event;
+
+typedef struct{
   event_type type;
   u32 id;
   u32 timestamp;
@@ -210,6 +215,7 @@ typedef struct{
     key_event key;
     mouse_motion_event mouse_motion;
     mouse_button_event mouse_button;
+    mouse_wheel_event mouse_wheel;
     joy_axis_event joy_axis;
     joy_button_event joy_button;
   };
