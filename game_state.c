@@ -18,30 +18,30 @@ void add_entity(oct_node * oc, entity_header * eh){
     ceh = alloc0(sizeof(entity_list));
     oct_set_payload(oc, ceh);
   }
-  ceh->cnt += 1;
-  ceh->entity = realloc(ceh->entity, ceh->cnt * sizeof(entity_header *));
-  ceh->entity[ceh->cnt - 1] = eh;
+  int prevcnt = ceh->cnt++;
+  ceh->entity = ralloc(ceh->entity, ceh->cnt * sizeof(entity_header *));
+  ceh->entity[prevcnt] = eh;
   eh->node = oc;
 }
 
 void remove_entity(entity_header * eh){
   entity_list * ceh = oct_get_payload(eh->node);
   ASSERT(ceh != NULL);
-  for(size_t i = 0; i < ceh->cnt; i++){
+  size_t prevcnt = ceh->cnt--;
+  for(size_t i = 0; i < prevcnt; i++){
+
     if(ceh->entity[i] == eh){
-      memmove(ceh->entity + i, ceh->entity + i, (ceh->cnt - i - 1) * sizeof(entity_header *));
+      memmove(ceh->entity + i, ceh->entity + i + 1, (prevcnt - i) * sizeof(entity_header *));
       break;
     }
   }
-  ceh->cnt -= 1;
   if(ceh->cnt == 0){
     dealloc(ceh->entity);
     ceh->entity = NULL;
     oct_set_payload(eh->node, NULL);
     dealloc(ceh);
-  }
-  else{
-    ceh->entity = realloc(ceh->entity, ceh->cnt * sizeof(entity_header *));
+  }else{
+    ceh->entity = ralloc(ceh->entity, ceh->cnt * sizeof(entity_header *));
   }
   eh->node = NULL;
 }

@@ -219,7 +219,6 @@ void update_entities(oct_node * n1, game_data * gd, void (* f)(entity_header * e
 void update_ai(entity_header * eh, game_data * gd){
   if(eh->type == OBJECT && ht_lookup(gd->enemies, &eh)){
     int dx = rand() % 3 - 1;
-    //logd("This happens.. %i\n", dx);
     entity * et = (entity *) eh;
     et->offset =vec3_add(et->offset, vec3mk(dx, 0, 0));
     update_entity(et);
@@ -248,7 +247,7 @@ int main(){
       for(int j = -4; j <= 4; j++){
 	oct_node * r = oct_get_relative(super_1, (vec3i){i, 0, j});
 	load_node(r, gd, 4);
-	//update_entities(oct_get_nth_super(r, 4), gd, update_ai);
+	update_entities(r, gd, update_ai);
       }
     UNUSED(state);
     renderer_render(rnd2, &state);
@@ -301,15 +300,10 @@ int main(){
       }
       
       if(!collision && !bottom_collision){
-	oct_node * _n = n->node;
-	oct_node * _n2 = n_2->node;
-	
 	n->offset = newoffset;
 	n_2->offset = newoffset;
-	remove_entity((entity_header *) n);
-	remove_entity((entity_header *) n_2);
-	add_entity(oct_find_fitting_node(_n, &n->offset, &n->size), (entity_header *) n);
-	add_entity(oct_find_fitting_node(_n2, &n_2->offset, &n_2->size), (entity_header *) n_2);
+	update_entity(n);
+	update_entity(n_2);
       }
     }else{
       // handle gravity.
