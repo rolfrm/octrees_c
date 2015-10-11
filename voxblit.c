@@ -320,12 +320,161 @@ void update_ai(entity_header * eh, game_data * gd){
   }
 }
 
-static vec3i inv_iso(vec2i p, int y){
+static vec3i inv_iso(vec2 p, int y){
   
-  return (vec3i){(p.x + p.y * 2) / 2,  y,  -(p.y * 2 - p.x) / 2};
+  return (vec3i){(p.x + p.y * 2 + 1) / 2,  y,  -(p.y * 2 - p.x + 1) / 2};
+}
+
+// Binary search to find group.
+static i64 find_index(i64 * indexes, i64 size, i64 index){
+  i64 distance = 100;
+  i64 start = 0;
+  i64 search_bounds = (size + 1) / 2;
+  if(size > index){
+    i64 first_index = indexes[index];
+    distance = index - first_index;
+    if(distance == 0)
+      return index;
+    if(distance < search_bounds){
+      search_bounds = distance;
+      start = first_index + distance;
+    }
+  }
+
+  while(true){
+
+    i64 next = search_bounds + start;
+    logd("%i %i %i %i\n", search_bounds, start, next, indexes[next]);
+    if(indexes[next] == index)
+      return next;
+    if(indexes[next] > index){
+      search_bounds = - (search_bounds + 1) / 2;
+    }
+    if(indexes[next] < index)
+      search_bounds = search_bounds / 2;
+    if(search_bounds == 0)
+      return -1;
+    start = next;
+  }
+  UNREACHABLE();
+  return -1;
+}
+
+/*static i64 find_index_interp(i64 * indexes, i64 size, i64 index){
+  
+  i64 a = index;
+  i64 s1;
+  i64 b;
+  i64 d;
+  i64 s2;
+  i64 c;
+  while(true){
+    s1 = MIN(a, size - 1);
+    b = indexes[s1];
+    if(b == index) return s1;
+    d = b - s1;
+    s2 = MIN(MAX(0, b), size -1);
+    c = indexes[s2];
+    if(c == index) return s2;
+    double delta = (s1 - s2) / (double) (b - c);
+    a = (index - c) * delta + s1;
+    logd("%i %i %i %i %i %f\n", s1, s2, b, c, d, delta);
+    if(a == s1) return -1;
+  }
+  UNREACHABLE();
+  return -1;
+  }*/
+
+static i64 find_index_interp2(i64 * indexes, i64 size, i64 index){
+  i64 i1 = 0, i2 = size -1, a1 = indexes[i1], a2 = indexes[i2];
+  i64 a = ((index - a1) * size) / (a2 - a1);
+  i64 binerror = 2 * (size / 4);
+  i64 pa = a;
+  while(true){
+    i64 new_index = a;
+    if(new_index < 0)
+      new_index = 0;
+    else if (new_index >= size)
+      new_index = size - 1;
+    i64 new_value = indexes[new_index];
+    i64 error = new_value - index;
+    if(error == 0)
+      return new_index;
+    else if(error < 0){
+      if(binerror < -error)
+	error = -binerror;
+      else
+	binerror = -error;
+    }else{
+      if(binerror < error)
+	error = binerror;
+      else
+	binerror = error;
+    }
+    pa = a;
+    a = new_index - error;
+    if(a == pa) return -1;
+    if(binerror > 1)
+      binerror /= 2;
+  }
+  UNREACHABLE();
+  return -1;
+}
+
+static i64 find_index_interp3(i64 * indexes, i64 size, i64 index){
+  i64 a = size / 2;
+  i64 binerror = size / 2;
+  while(true){
+    i64 new_index = a;
+    if(new_index < 0) new_index = 0;
+    else if(new_index >= size) new_index = size -1;
+    i64 new_value = indexes[new_index];
+    i64 error = new_value - index;
+    if(error < 0)
+      a = new_index + binerror;
+    else if (error > 0)
+      a = new_index - binerror;
+    else
+      return new_index;
+    binerror = binerror >= 2 ? (binerror / 2) : 1;
+  }
+  UNREACHABLE();
+  return -1;
 }
 
 int main(){
+  UNUSED(find_index_interp3);
+  i64 size = 10000000;
+  i64 * indexes = aligned_alloc(16, size * sizeof(i64));// alloc(size * sizeof(i64));// = {4,5,6,7,9, 11 ,14 , 17,18,19, 30, 40, 41,42,43};
+  indexes[0] = 5;
+  for(i64 i = 1; i <size; i++)
+    indexes[i] = indexes[i - 1] + (rand() % 4) + ((rand() % 100 == 0) ? 20 : 0) + 1;
+  i64 idx = find_index(indexes, array_count(indexes), 4);
+  logd("IDX: %i\n", idx);  
+  i64 i1_total = 0, i2_total = 0;
+  i64 ts = timestamp();
+  for(i64 i = 0; i < size; i++){
+    ASSERT(i == find_index_interp2(indexes, size, indexes[i]));
+  }
+
+  i64 ts2 = timestamp();
+  for(i64 i = 0; i < size; i++){
+    ASSERT(i == find_index_interp3(indexes, size, indexes[i]));
+  }
+  int comp(i64 * a, i64 * b){
+    if(*a == *b) return 0;
+    if(*a < *b)
+      return -1;
+    return 1;
+  }
+  i64 ts3 = timestamp();
+  for(i64 i = 0; i < size; i++){
+    ASSERT((indexes + i) == bsearch(indexes + i, indexes, size, sizeof(i64), (__compar_fn_t) comp) );
+  }
+  i64 ts4 = timestamp();
+  logd("Tested find algorithms { fancy search: %i in %i µs, bin search: %i in %i µs, libc search %i µs }\n", i1_total, ts2 - ts, i2_total, ts3 - ts2, ts4 - ts3);
+
+  return 0;
   int yoff = 0;
   game_renderer * rnd2 = renderer_load(500, 500, 28);
   oct_node * n1 = oct_create();
@@ -344,7 +493,7 @@ int main(){
   ht_insert(gd->enemies, &n_3, &unused_1);
   while(true){
     vec2i p = renderer_get_mouse_position(rnd2);
-    vec2i p2 = (vec2i){p.x / 28, p.y / 28};
+    vec2 p2 = vec2mk(p.x / 28.0, (p.y - 40) / 28.0 );
     vec3i p3 =inv_iso(p2, yoff);
     select_cube->offset = vec3i_to_vec3(p3);
     remove_entity((entity_header *)select_cube);
