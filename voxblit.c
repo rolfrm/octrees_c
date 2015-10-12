@@ -421,6 +421,12 @@ static i64 find_index_interp2(i64 * indexes, i64 size, i64 index){
   return -1;
 }
 
+static i64 find_indexe_interp4(i64 * indexes, i64 size, i64 * index, i64 index_cnt, i64 * out_buffer){
+  for(i64 i = 0; i < index_cnt; i++){
+    i64 thisindex = index[i];
+  }
+}
+
 static i64 find_index_interp3(i64 * indexes, i64 size, i64 index){
   i64 a = size / 2;
   i64 binerror = size / 2;
@@ -444,11 +450,11 @@ static i64 find_index_interp3(i64 * indexes, i64 size, i64 index){
 
 int main(){
   UNUSED(find_index_interp3);
-  i64 size = 10000000;
+  i64 size = 1000000;
   i64 * indexes = aligned_alloc(16, size * sizeof(i64));// alloc(size * sizeof(i64));// = {4,5,6,7,9, 11 ,14 , 17,18,19, 30, 40, 41,42,43};
   indexes[0] = 5;
   for(i64 i = 1; i <size; i++)
-    indexes[i] = indexes[i - 1] + (rand() % 4) + ((rand() % 100 == 0) ? 20 : 0) + 1;
+    indexes[i] = indexes[i - 1] + (rand() % 1) + ((rand() % 100 == 0) ? 20 : 0) + 1;
   i64 idx = find_index(indexes, array_count(indexes), 4);
   logd("IDX: %i\n", idx);  
   i64 i1_total = 0, i2_total = 0;
