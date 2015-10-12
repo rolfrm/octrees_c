@@ -33,39 +33,12 @@ oct_node * oct_get_super(oct_node * node){
 
 }
 
-// Binary search to find group.
-static i64 find_index(i64 * indexes, i64 size, i64 index){
-  i64 distance = 100;
-  i64 start = size / 2;
-  i64 search_bounds = (size + 1) / 2;
-  if(size > index){
-    i64 first_index = indexes[index];
-    distance = index - first_index;
-    if(distance == 0)
-      return index;
-    if(distance < search_bounds){
-      search_bounds = distance;
-    }
-  }
-
-  while(true){
-    i64 next = search_bounds + index;
-    if(indexes[next] == index)
-      return next;
-    if(indexes[next] > index){
-      search_bounds = - (search_bounds + 1) / 2;
-    }
-    if(indexes[next] < index)
-      search_bounds = search_bounds / 2;
-    if(search_bounds == 0)
-      return -1;
-  }
-  UNREACHABLE();
-  return -1;
-}
-
 oct_node * oct_peek_super(oct_node * node){
-  node->tree->super_group
+  i64 idx = oct_find(node->tree->group, node->tree->node_count, node->group);
+  i64 super_group = node->tree->sub_grooup[idx];
+  i64 idx2 = oct_find(node->tree->group, node->tree->node_count, super_group);
+  i64 start_pt = idx2 * 8;
+  for(i64 s = start_pt; < start_pt + 8; s++)
 }
 
 // Generates a group of nodes and returns 
