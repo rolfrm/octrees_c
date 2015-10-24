@@ -20,7 +20,14 @@ oct_node * oct_get_sub(oct_node * oc, int idx){
 
   return oc->sub[idx];
 }
+oct_node oct_node_empty = {0};
+bool oct_node_null(oct_node oc){
+  oct_node_compare(oc, oct_node_empty);
+}
 
+int oct_compare(oct_node a, oct_node b){
+  return a.ptr1 == b.ptr1 && a.ptr2 == b.ptr2;
+}
 oct_node * oct_peek_sub(oct_node * node, int idx){
   ASSERT(idx < 8 && idx >= 0);
   return node->sub[idx];

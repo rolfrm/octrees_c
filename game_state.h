@@ -9,21 +9,21 @@ typedef enum _entity_type{
 
 typedef struct {
   entity_type type;
-  oct_node * node;
+  oct_node node;
 }entity_header;
 
 typedef struct _entity entity;
 
 typedef struct {
   entity_type type;
-  oct_node * node;
+  oct_node node;
   vec3 offset;
   entity * origin;
 }satelite;
 
 typedef struct {
   entity_type type;
-  oct_node * node;
+  oct_node node;
   texture_asset * asset;
 }tile;
 
@@ -32,16 +32,16 @@ typedef struct {
   size_t cnt;
 }entity_list;
 
-void add_entity(oct_node * oc, entity_header * eh);
+void add_entity(oct_node oc, entity_header * eh);
 void remove_entity(entity_header * eh);
 struct _entity{
   entity_type type;
-  oct_node * node;
+  oct_node node;
   texture_asset * texture;
   vec3 offset;
   vec3 size;
 };
 
 typedef struct _world_state{
-  oct_node * center_node;
+  oct_node center_node;
 }world_state;

@@ -1,88 +1,140 @@
+#include <iron/full.h>
 
 // Opaque octree node type.
 //typedef struct _oct_node oct_node;
+#define realloc_column(table,column) table->column = ralloc(table->column, sizeof(table->column[0]) * table->capacity);
 
 typedef struct _octree{
-  i64 * group; // index. number of this is node_count / 8.
-  i64 * sub_group;  // number of these is node_count
-  i64 * super_group; // super group.
-  void ** payload; // number of these is also node_count
+  // points up. cnt: count / 8
+  i64 * super_group;
+  // points down. cnt: count
+  i64 * sub_group; 
+  // payload for node. cnt: count
+  void ** payload; 
   
-  u64 node_count;
-  u64 capacity;
+  u64 cnt, capacity;
 }octree;
-
-struct _oct_node{
-  octree * tree;
-  i64 group;
-  i8 index;
-  i64 last_index;
-};
-
-oct_node * oct_get_sub(oct_node * node, int idx){
-  
-}
-
-
-oct_node * oct_peek_sub(oct_node * node, int idx){
-
-}
-
-
-oct_node * oct_get_super(oct_node * node){
-
-}
-
-oct_node * oct_peek_super(oct_node * node){
-  i64 idx = oct_find(node->tree->group, node->tree->node_count, node->group);
-  i64 super_group = node->tree->sub_grooup[idx];
-  i64 idx2 = oct_find(node->tree->group, node->tree->node_count, super_group);
-  i64 start_pt = idx2 * 8;
-  for(i64 s = start_pt; < start_pt + 8; s++)
-}
 
 // Generates a group of nodes and returns 
 static i64 gen_group(octree * tree){
-  if(tree->node_count == tree->capacity){
-    size_t oldcap = tree->capacity;
-    tree->capacity = oldcap == 0 ? 16 : oldcap * 2;
-    tree->group = ralloc(tree->group, tree->capacity * sizeof(tree->group[0]));
-    tree->sub_group = ralloc(tree->sub_group, tree->capacity * sizeof(tree->sub_group[0]) * 8);
-    tree->payload = ralloc(tree->payload, tree->capacity * sizeof(tree->payload[0]) * 8);
+  if(tree->cnt == tree->capacity){
+    tree->capacity = tree->capacity == 0 ? 64 : (tree->capacity * 2);
+    realloc_column(tree, sub_group);
+    realloc_column(tree, payload);
+    tree->super_group = ralloc(tree->super_group, tree->capacity / 8 * sizeof(tree->super_group[0]));
   }
   
-  u64 prev_cnt = tree->node_count++;
-  i64 ngroup = tree->node_count == 0 : 0 ? (tree->group[tree->node_count - 1] + 1);
-  tree->group[tree->node_count] = ngroup;
-
+  u64 prev_cnt = tree->cnt++;
+  tree->sub_group[prev_cnt] = -1;
+  tree->payload[prev_cnt] = NULL;
   return prev_cnt;
 }
 
+typedef struct _oct_node{
+  octree * tree;
+  i64 item;
+}oct_node;
+oct_node oct_node_empty = {0};
+int oct_node_compare(oct_node a, oct_node b){
+  return a.tree == b.tree && a.item == b.item;
+}
+bool oct_node_null(oct_node oc){
+  return oct_node_compare(oc, oct_node_empty);
+}
 
-oct_node * oct_create(){
-  oct_node * oc = alloc0(sizeof(oct_node));
-  oc->tree = alloc0(sizeof(octree));
-  oc->item = 0;
-  gen_group(oc->tree);
-  oc->tree->super_group[0] = -1;
+
+
+oct_node oct_get_sub(oct_node node, int idx){
+  octree * tree = node.tree;
+  i64 sub = tree->sub_group[node.item];
+  if(sub == -1){
+    i64 newitems[8];
+    for(size_t i = 0 ; i < 8; i++){
+      newitems[i] = gen_group(tree);
+    }
+    tree->super_group[newitems[0]/8] = node.item;
+    tree->sub_group[node.item] = newitems[0] / 8;
+    sub = tree->sub_group[node.item];
+  }
+  node.item = sub * 8 + idx;
+  return node;
+}
+
+
+oct_node oct_peek_sub(oct_node node, int idx){
+  octree * tree = node.tree;
+  i64 sub = tree->sub_group[node.item];
+  if(sub == -1)
+    return oct_node_empty;
+  node.item = sub * 8 + idx;
+  return node;
+}
+
+void oct_print(oct_node node){
+  octree * tree = node.tree;
+  for(size_t i = 0 ; i < tree->cnt; i++){
+    logd("%i:  %i   %i   %p\n",i,  tree->super_group[i/8], tree->sub_group[i], tree->payload[i]);
+  }
+}
+
+
+oct_node oct_get_super(oct_node node){
+  octree * tree = node.tree;
+  i64 gp_idx = node.item / 8;
+  i64 super_grp = tree->super_group[gp_idx];
+  logd("find grp %i %i %i\n", super_grp, gp_idx, node.item);
+  if(super_grp == -1){
+    i64 offset = (node.item / 8 & 1) ? 0 : 7;
+    i64 newitems[8];
+    for(size_t i = 0 ; i < 8; i++){
+      newitems[i] = gen_group(tree);
+     
+    }
+    tree->super_group[newitems[0] /8] = -1;
+    tree->super_group[node.item / 8] = newitems[offset];
+    tree->sub_group[newitems[offset]] = gp_idx;
+  }
+  node.item = tree->super_group[node.item / 8];
+  return node;
+}
+
+oct_node oct_peek_super(oct_node node){
+  i64 grp = node.item / 8;
+  i64 super = node.tree->super_group[grp];
+  if(super == -1)
+    return oct_node_empty;
+  node.item = super;
+  return node;
+}
+
+oct_node oct_create(){
+  oct_node oc;
+  oc.item = 0;
+  oc.tree = alloc0(sizeof(octree));
+  i64 idxes[8];
+  for(i64 i = 0 ; i < 8; i++){
+    idxes[i] = gen_group(oc.tree);
+    oc.tree->super_group[idxes[i]] = -1;
+  }
   return oc;
 }
 
 
-void oct_delete(oct_node * node){
-  UNUSED(node);
+void oct_delete(oct_node node){
+  node.tree->sub_group[node.item] = -1;
 }
 
-void oct_delete_sub(oct_node * node, int idx){
-  UNUSED(node);UNUSED(idx);
-}
-
-
-void * oct_get_payload(oct_node * node){
-  return node->tree->payload[node->item];
+void oct_delete_sub(oct_node node, int idx){
+  UNUSED(idx);
+  node.tree->sub_group[node.item] = -1;
 }
 
 
-void oct_set_payload(oct_node * node, void * payload){
-  node->tree->payload[node->item] = payload;
+void * oct_get_payload(oct_node node){
+  return node.tree->payload[node.item];
+}
+
+
+void oct_set_payload(oct_node node, void * payload){
+  node.tree->payload[node.item] = payload;
 }

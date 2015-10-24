@@ -12,7 +12,7 @@
 #include "octree.h"
 #include "game_state.h"
 
-void add_entity(oct_node * oc, entity_header * eh){
+void add_entity(oct_node oc, entity_header * eh){
   entity_list * ceh = oct_get_payload(oc);
   if(ceh == NULL){
     ceh = alloc0(sizeof(entity_list));
@@ -43,5 +43,5 @@ void remove_entity(entity_header * eh){
   }else{
     //ceh->entity = ralloc(ceh->entity, ceh->cnt * sizeof(entity_header *));
   }
-  eh->node = NULL;
+  eh->node = oct_node_empty;
 }
