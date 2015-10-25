@@ -223,7 +223,7 @@ game_data * load_game_data(game_renderer * rnd2){
   game_data_add_sprite(gd, buggy);
   game_data_add_sprite(gd, cat);
   game_data_add_sprite(gd, select_cube);
-  gd->loaded_nodes = ht_create(1024, 8, 4);
+  gd->loaded_nodes = ht_create(1024, sizeof(oct_node), 4);
   gd->enemies = ht_create(1024, 8, 4);
   return gd;
 }
@@ -331,17 +331,7 @@ int main(){
   int yoff = 0;
   game_renderer * rnd2 = renderer_load(500, 500, 28);
   oct_node n1 = oct_create();
-  oct_node n2 = oct_get_super(n1);
-  oct_node n3 = oct_get_super(n2);
-  oct_node n4 = oct_peek_sub(n2, 0);
-  logd("-- %i\n", n4);
-  oct_node n11 = oct_get_sub(n1,5);
-  oct_get_sub(n11,5);
-  oct_print (n1);
 
-  logd("N2: %i %i %i %i %i\n", n2, n3, oct_get_payload(n1), oct_get_payload(n2), oct_get_payload(n4));
-
-  //return 0;
   world_state state = { n1 };
   game_data * gd = load_game_data(rnd2);
   
@@ -350,10 +340,11 @@ int main(){
   entity * n_3 = insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
   //insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
   tile * orig = insert_tile(n1, vec3i_make(0, 0, 0), gd->tiles[GD_TREE_1]);
-  entity * ne = insert_entity(n1, vec3mk(-5, -4, -5), vec3mk(1, 1, 1), gd->sprites[GD_BUG]);
+  //entity * ne = insert_entity(n1, vec3mk(-5, -4, -5), vec3mk(1, 1, 1), gd->sprites[GD_BUG]);
+  
   entity * select_cube = insert_entity(n1, vec3mk(-2, -8, -4), vec3mk(1, 1, 1), gd->sprites[GD_SELECT_CUBE]);
   int unused_1;
-  ht_insert(gd->enemies, &ne, &unused_1);
+  //ht_insert(gd->enemies, &ne, &unused_1);
   ht_insert(gd->enemies, &n_3, &unused_1);
   while(true){
     vec2i p = renderer_get_mouse_position(rnd2);
@@ -372,6 +363,7 @@ int main(){
     for(int i = -4; i <= 4; i++)
       for(int j = -4; j <= 4; j++){
 	oct_node r = oct_get_relative(super_1, (vec3i){i, 0, j});
+	UNUSED(r);
 	load_node(r, gd, 4);
       }
     super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, 0, 0}), 4);
@@ -465,7 +457,7 @@ int main(){
       n->offset = newoffset;
       n_2->offset = newoffset;
     }
-    oct_clean_tree(oct_get_nth_super(n->node, 5));
+    //oct_clean_tree(oct_get_nth_super(n->node, 5));
     state.center_node = n->node;
     usleep(100000);
   }

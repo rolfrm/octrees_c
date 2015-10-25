@@ -30,10 +30,16 @@ static i64 gen_group(octree * tree){
   return prev_cnt;
 }
 
+
 typedef struct _oct_node{
   octree * tree;
   i64 item;
 }oct_node;
+
+int oct_index(oct_node oc){
+  return oc.item - (oc.item / 8) * 8;
+}
+
 oct_node oct_node_empty = {0};
 int oct_node_compare(oct_node a, oct_node b){
   return a.tree == b.tree && a.item == b.item;
@@ -41,8 +47,6 @@ int oct_node_compare(oct_node a, oct_node b){
 bool oct_node_null(oct_node oc){
   return oct_node_compare(oc, oct_node_empty);
 }
-
-
 
 oct_node oct_get_sub(oct_node node, int idx){
   octree * tree = node.tree;
@@ -82,7 +86,7 @@ oct_node oct_get_super(oct_node node){
   octree * tree = node.tree;
   i64 gp_idx = node.item / 8;
   i64 super_grp = tree->super_group[gp_idx];
-  logd("find grp %i %i %i\n", super_grp, gp_idx, node.item);
+  //logd("find grp %i %i %i\n", super_grp, gp_idx, node.item);
   if(super_grp == -1){
     i64 offset = (node.item / 8 & 1) ? 0 : 7;
     i64 newitems[8];

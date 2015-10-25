@@ -1,17 +1,7 @@
 #include <iron/full.h>
 #include "oct_node.h"
 #include "vec3i.h"
-
-int oct_index(oct_node oc){
-  oct_node s = oct_peek_super(oc);
-  ASSERT(!oct_node_null(s));
-  for(int i = 0; i < 8; i++)
-    if(oct_node_compare(oct_peek_sub(s, i), oc))
-      return i;
-  ERROR("Not a child node of that element\n");
-  return -1;
-}
-
+int oct_index(oct_node oc);
 static int vec3i_to_index(vec3i v){
   return v.x + v.y * 2 + v.z * 4;
 }
