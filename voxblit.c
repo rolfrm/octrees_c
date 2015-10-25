@@ -19,24 +19,24 @@ void _error(const char * file, int line, const char * str, ...){
   raise(SIGINT);
 }
 
-tile * insert_tile(oct_node * oc, vec3i pos, texture_asset * asset){
+tile * insert_tile(oct_node oc, vec3i pos, texture_asset * asset){
   oc = oct_get_relative(oc, pos);
-  tile t = {TILE, NULL, asset};
+  tile t = {TILE, oct_node_empty, asset};
   tile * t2 = clone(&t, sizeof(t));
   add_entity(oc, (entity_header *) t2);
   return t2;
 }
 
-entity * insert_entity(oct_node * oc, vec3 pos, vec3 size, texture_asset * asset){
+entity * insert_entity(oct_node oc, vec3 pos, vec3 size, texture_asset * asset){
   oc = oct_find_fitting_node(oc, &pos, &size);
-  entity e = {OBJECT, NULL, asset, pos, size};
+  entity e = {OBJECT, oct_node_empty, asset, pos, size};
   entity * e2 = clone(&e, sizeof(entity));
   add_entity(oc, (entity_header *) e2);
   return e2;
 }
 
 void update_entity(entity * e){
-  oct_node * oc = e->node;
+  oct_node oc = e->node;
   remove_entity((entity_header *) e);
   oc = oct_find_fitting_node(oc, &e->offset, &e->size);
   add_entity(oc, (entity_header *) e);
@@ -87,10 +87,10 @@ enum{
 };
 
 // lod_offset: how much above nominal LOD this node is. 
-void load_node(oct_node * node, game_data * game_data, int lod_offset){
+void load_node(oct_node node, game_data * game_data, int lod_offset){
   if(ht_lookup(game_data->loaded_nodes, &node))
     return;
-  logd("Loading node.. %i\n", node);
+  //logd("Loading node.. %i\n", node);
   int val = 0;
   ht_insert(game_data->loaded_nodes, &node, &val);
   int size = 1;
@@ -119,8 +119,8 @@ void load_node(oct_node * node, game_data * game_data, int lod_offset){
 	    for(int k2 = 0; k2 < len - i2; k2++)
 	      insert_tile(node, vec3i_make(i + k2 + i2/2, 1  + i2, j + j2 + i2/2), game_data->tiles[5]);
 	*/
-	for(int l = 0; l < 100; l++)
-	  insert_tile(node, vec3i_make(i + l, 1  + l, j), game_data->tiles[5]);
+	//for(int l = 0; l < 100; l++)
+	//insert_tile(node, vec3i_make(i + l, 1  + l, j), game_data->tiles[5]);
       }else if(rand() % 2000 == 0){
 	entity * n2 = insert_entity(node, vec3mk(i, 1, j), 
 				    vec3mk(1, 1, 1), 
@@ -170,12 +170,13 @@ void load_node(oct_node * node, game_data * game_data, int lod_offset){
 game_data * load_game_data(game_renderer * rnd2){
   game_data * gd = alloc0(sizeof(game_data));
 
-  texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
-  texture_asset * tile25 = renderer_load_texture(rnd2, "../racket_octree/tile7.png");
+  texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile62.png");
+  texture_asset * tile25 = renderer_load_texture(rnd2, "../racket_octree/tile72.png");
   texture_asset * tile3 = renderer_load_texture(rnd2, "../racket_octree/tile2x2.png");
   texture_asset * tile1 = renderer_load_texture(rnd2, "../racket_octree/tile1.png");
   //  texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy2.png");
-  texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy3.png");
+  //texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy3.png");
+  texture_asset * guy = renderer_load_texture(rnd2, "mannie.png");
   texture_asset * guyupper = renderer_clone_texture(guy);
   texture_asset * tile4 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
   texture_asset * tile5 = renderer_load_texture(rnd2, "../racket_octree/tile8.png");
@@ -223,13 +224,13 @@ game_data * load_game_data(game_renderer * rnd2){
   game_data_add_sprite(gd, buggy);
   game_data_add_sprite(gd, cat);
   game_data_add_sprite(gd, select_cube);
-  gd->loaded_nodes = ht_create(1024, 8, 4);
+  gd->loaded_nodes = ht_create(1024, sizeof(oct_node), 4);
   gd->enemies = ht_create(1024, 8, 4);
   return gd;
 }
 
-void update_entities(oct_node * n1, game_data * gd, void (* f)(entity_header * eh, game_data * gd)){
-  void rnd(oct_node * oc, float size, vec3 offset){
+void update_entities(oct_node n1, game_data * gd, void (* f)(entity_header * eh, game_data * gd)){
+  void rnd(oct_node oc, float size, vec3 offset){
     UNUSED(size);UNUSED(offset);
     entity_list * lst = oct_get_payload(oc);
     if(lst == NULL) return;
@@ -240,8 +241,8 @@ void update_entities(oct_node * n1, game_data * gd, void (* f)(entity_header * e
   oct_render_node(n1, 1, vec3mk(0, 0, 0), rnd);
 }
 
-void update_entity_positions(oct_node * n1){
-  void rnd(oct_node * oc, float size, vec3 offset){
+void update_entity_positions(oct_node n1){
+  void rnd(oct_node oc, float size, vec3 offset){
     UNUSED(size);UNUSED(offset);
     entity_list * lst = oct_get_payload(oc);
     if(lst == NULL) return;
@@ -267,7 +268,7 @@ void update_entity_positions(oct_node * n1){
       for(size_t i = 0; i < cnt; i++){
 	if(objs[i]->type == OBJECT){
 	  entity * e = (entity *) objs[i];
-	  oct_node * oc2 = oct_find_fitting_node(oc, &e->offset, &e->size);
+	  oct_node oc2 = oct_find_fitting_node(oc, &e->offset, &e->size);
 	  add_entity(oc2, (entity_header *) e);
 	}
       }
@@ -291,7 +292,7 @@ void update_ai(entity_header * eh, game_data * gd){
       vec3 newoffset = vec3_add(n->offset, vec3mk(0, -1, 0));
       bool collision = false;
       
-      void check_collision(oct_node * oc, vec3 pos, vec3 size){
+      void check_collision(oct_node oc, vec3 pos, vec3 size){
 	UNUSED(pos);UNUSED(size);
 	entity_list * lst = oct_get_payload(oc);
 	if(lst == NULL) return;
@@ -306,7 +307,7 @@ void update_ai(entity_header * eh, game_data * gd){
       vec3 newoffset = vec3_add(n->offset, vec3mk(dx, 0, dy));
       bool collision = false;
       
-      void check_collision(oct_node * oc, vec3 pos, vec3 size){
+      void check_collision(oct_node oc, vec3 pos, vec3 size){
 	UNUSED(pos);UNUSED(size);
 	entity_list * lst = oct_get_payload(oc);
 	if(lst == NULL) return;
@@ -325,11 +326,14 @@ static vec3i inv_iso(vec2 p, int y){
   return (vec3i){(p.x + p.y * 2 + 1) / 2,  y,  -(p.y * 2 - p.x + 1) / 2};
 }
 
+void oct_print(oct_node node);
+void oct_defragment(oct_node oc);
 int main(){
 
   int yoff = 0;
   game_renderer * rnd2 = renderer_load(500, 500, 28);
-  oct_node * n1 = oct_create();
+  oct_node n1 = oct_create();
+
   world_state state = { n1 };
   game_data * gd = load_game_data(rnd2);
   
@@ -338,45 +342,48 @@ int main(){
   entity * n_3 = insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
   //insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
   tile * orig = insert_tile(n1, vec3i_make(0, 0, 0), gd->tiles[GD_TREE_1]);
-  entity * ne = insert_entity(n1, vec3mk(-5, -4, -5), vec3mk(1, 1, 1), gd->sprites[GD_BUG]);
+  //entity * ne = insert_entity(n1, vec3mk(-5, -4, -5), vec3mk(1, 1, 1), gd->sprites[GD_BUG]);
+  
   entity * select_cube = insert_entity(n1, vec3mk(-2, -8, -4), vec3mk(1, 1, 1), gd->sprites[GD_SELECT_CUBE]);
   int unused_1;
-  ht_insert(gd->enemies, &ne, &unused_1);
+  //ht_insert(gd->enemies, &ne, &unused_1);
   ht_insert(gd->enemies, &n_3, &unused_1);
   for(int i = 0; i < 10000; i++){
+    //logd("I: %i\n", i);
     vec2i p = renderer_get_mouse_position(rnd2);
     vec2 p2 = vec2mk(p.x / 28.0, (p.y - 40) / 28.0 );
     vec3i p3 =inv_iso(p2, yoff);
     select_cube->offset = vec3i_to_vec3(p3);
     remove_entity((entity_header *)select_cube);
-    logd("I: %i\n", i);
     //logd(" +++ "); vec3i_print(p3);logd("\n");
-    oct_node * oc2 = oct_find_fitting_node(n->node, &select_cube->offset, &select_cube->size);
+    oct_node oc2 = oct_find_fitting_node(n->node, &select_cube->offset, &select_cube->size);
     add_entity(oc2, (entity_header *) select_cube);
 
 
     vec3 offset = oct_node_offset(n_2->node, orig->node);
     //logd("Offset: "); vec3_print(offset);vec3_print(n->offset);logd("\n");
-    oct_node * super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-offset.y, 0}), 4);
+    oct_node super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-offset.y, 0}), 4);
     for(int i = -4; i <= 4; i++)
       for(int j = -4; j <= 4; j++){
-	oct_node * r = oct_get_relative(super_1, (vec3i){i, 0, j});
+	oct_node r = oct_get_relative(super_1, (vec3i){i, 0, j});
+	UNUSED(r);
 	load_node(r, gd, 4);
       }
     super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, 0, 0}), 4);
     for(int i = -2; i <= 2; i++)
       for(int j = -2; j <= 2; j++){
-	oct_node * r = oct_get_relative(super_1, (vec3i){i, 0, j});
+	oct_node r = oct_get_relative(super_1, (vec3i){i, 0, j});
 	update_entities(r, gd, update_ai);
 	update_entity_positions(r);
       }
     UNUSED(state);
-    //renderer_render(rnd2, &state);
+    renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     gd->controller = renderer_game_controller();
     for(u32 i = 0; i < event_cnt; i++){
-      oct_node * node1;
+      
+      oct_node node1;
       entity_list * payload;
     entity_list * lst;
       switch(evt[i].type){
@@ -423,7 +430,7 @@ int main(){
       vec3 newoffset = vec3_add(n->offset, mv);
       bool collision = false;
       
-      void check_collision(oct_node * oc, vec3 pos, vec3 size){
+      void check_collision(oct_node oc, vec3 pos, vec3 size){
 	UNUSED(pos);UNUSED(size);
 	entity_list * lst = oct_get_payload(oc);
 	if(lst == NULL) return;
@@ -456,7 +463,7 @@ int main(){
     }
     //oct_clean_tree(oct_get_nth_super(n->node, 5));
     state.center_node = n->node;
-    //usleep(100000);
+    usleep(100000);
   }
     
   return 0;
