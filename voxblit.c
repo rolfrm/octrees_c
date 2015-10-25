@@ -90,7 +90,7 @@ enum{
 void load_node(oct_node node, game_data * game_data, int lod_offset){
   if(ht_lookup(game_data->loaded_nodes, &node))
     return;
-  logd("Loading node.. %i\n", node);
+  //logd("Loading node.. %i\n", node);
   int val = 0;
   ht_insert(game_data->loaded_nodes, &node, &val);
   int size = 1;
@@ -119,8 +119,8 @@ void load_node(oct_node node, game_data * game_data, int lod_offset){
 	    for(int k2 = 0; k2 < len - i2; k2++)
 	      insert_tile(node, vec3i_make(i + k2 + i2/2, 1  + i2, j + j2 + i2/2), game_data->tiles[5]);
 	*/
-	for(int l = 0; l < 100; l++)
-	  insert_tile(node, vec3i_make(i + l, 1  + l, j), game_data->tiles[5]);
+	//for(int l = 0; l < 100; l++)
+	//insert_tile(node, vec3i_make(i + l, 1  + l, j), game_data->tiles[5]);
       }else if(rand() % 2000 == 0){
 	entity * n2 = insert_entity(node, vec3mk(i, 1, j), 
 				    vec3mk(1, 1, 1), 
@@ -170,12 +170,13 @@ void load_node(oct_node node, game_data * game_data, int lod_offset){
 game_data * load_game_data(game_renderer * rnd2){
   game_data * gd = alloc0(sizeof(game_data));
 
-  texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
-  texture_asset * tile25 = renderer_load_texture(rnd2, "../racket_octree/tile7.png");
+  texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile62.png");
+  texture_asset * tile25 = renderer_load_texture(rnd2, "../racket_octree/tile72.png");
   texture_asset * tile3 = renderer_load_texture(rnd2, "../racket_octree/tile2x2.png");
   texture_asset * tile1 = renderer_load_texture(rnd2, "../racket_octree/tile1.png");
   //  texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy2.png");
-  texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy3.png");
+  //texture_asset * guy = renderer_load_texture(rnd2, "../racket_octree/guy3.png");
+  texture_asset * guy = renderer_load_texture(rnd2, "mannie.png");
   texture_asset * guyupper = renderer_clone_texture(guy);
   texture_asset * tile4 = renderer_load_texture(rnd2, "../racket_octree/tile6.png");
   texture_asset * tile5 = renderer_load_texture(rnd2, "../racket_octree/tile8.png");
@@ -326,6 +327,7 @@ static vec3i inv_iso(vec2 p, int y){
 }
 
 void oct_print(oct_node node);
+void oct_defragment(oct_node oc);
 int main(){
 
   int yoff = 0;
@@ -347,7 +349,7 @@ int main(){
   //ht_insert(gd->enemies, &ne, &unused_1);
   ht_insert(gd->enemies, &n_3, &unused_1);
   for(int i = 0; i < 10000; i++){
-    logd("I: %i\n", i);
+    //logd("I: %i\n", i);
     vec2i p = renderer_get_mouse_position(rnd2);
     vec2 p2 = vec2mk(p.x / 28.0, (p.y - 40) / 28.0 );
     vec3i p3 =inv_iso(p2, yoff);
@@ -375,7 +377,7 @@ int main(){
 	update_entity_positions(r);
       }
     UNUSED(state);
-    //renderer_render(rnd2, &state);
+    renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     gd->controller = renderer_game_controller();
@@ -461,7 +463,7 @@ int main(){
     }
     //oct_clean_tree(oct_get_nth_super(n->node, 5));
     state.center_node = n->node;
-    //usleep(100000);
+    usleep(100000);
   }
     
   return 0;

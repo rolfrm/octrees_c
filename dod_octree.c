@@ -8,7 +8,8 @@ typedef struct _octree{
   // points up. cnt: count / 8
   i64 * super_group;
   // points down. cnt: count
-  i64 * sub_group; 
+  // values are group and not item, so max_value(sub_group) is max_value(super_group)/8.
+  i32 * sub_group; 
   // payload for node. cnt: count
   void ** payload; 
   
@@ -22,12 +23,36 @@ static i64 gen_group(octree * tree){
     realloc_column(tree, sub_group);
     realloc_column(tree, payload);
     tree->super_group = ralloc(tree->super_group, tree->capacity / 8 * sizeof(tree->super_group[0]));
+    logd("Resize octree %p\n", tree->capacity);
   }
-  
+
   u64 prev_cnt = tree->cnt++;
   tree->sub_group[prev_cnt] = -1;
   tree->payload[prev_cnt] = NULL;
   return prev_cnt;
+}
+
+static void copy_defragmented(octree * src, octree * dst){
+  dst->cnt = 0;
+  i64 current_group = 0;
+  while(src->super_group[current_group] != -1)
+    current_group = src->super_group[current_group] / 8;
+  logd("Found group: %i", current_group);
+  i64 fix_group(i64 grp, i64 super){
+    i64 items[8];
+    for(int i = 0; i < 8; i++)
+      items[i] = gen_group(dst);
+    
+    dst->super_group[items[0] / 8] = super;
+    for(int i = 0; i < 8;i++){
+      i64 item = i + grp;
+      dst->payload[items[i]] = src->payload[item]; 
+      if(src->sub_group[item] != -1)
+	dst->sub_group[items[i]] = fix_group(src->sub_group[item] * 8, item);
+    }
+    return items[0] / 8;
+  }
+  fix_group(current_group, -1);
 }
 
 
@@ -35,6 +60,29 @@ typedef struct _oct_node{
   octree * tree;
   i64 item;
 }oct_node;
+
+
+oct_node oct_defragment(oct_node oc){
+  ASSERT(false);
+  // this code does not work
+  // it should probably be a part of some more general
+  // cleanup procedure where unused nodes can be pruned.
+  // It probably does not need to be called often. Only on save / load
+  // or when memory limit is reached.
+  octree * ntree = alloc0(sizeof(octree));
+  copy_defragmented(oc.tree, ntree);
+  dealloc(oc.tree->super_group);
+  dealloc(oc.tree->sub_group);
+  dealloc(oc.tree->payload);
+  
+  oc.tree->super_group = ntree->super_group;
+  oc.tree->sub_group = ntree->sub_group;
+  oc.tree->payload = ntree->payload;
+  oc.tree->cnt = ntree->cnt;
+  oc.tree->capacity = ntree->capacity;
+  dealloc(ntree);
+  return oc;
+}
 
 int oct_index(oct_node oc){
   return oc.item - (oc.item / 8) * 8;
@@ -44,6 +92,7 @@ oct_node oct_node_empty = {0};
 int oct_node_compare(oct_node a, oct_node b){
   return a.tree == b.tree && a.item == b.item;
 }
+
 bool oct_node_null(oct_node oc){
   return oct_node_compare(oc, oct_node_empty);
 }
