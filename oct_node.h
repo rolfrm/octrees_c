@@ -16,6 +16,8 @@ oct_node oct_get_super(oct_node node);
 
 oct_node oct_peek_super(oct_node node);
 
+bool oct_has_sub(oct_node node);
+
 // creates a new oct_node.
 oct_node oct_create();
 

@@ -64,6 +64,9 @@ oct_node oct_get_sub(oct_node node, int idx){
   return node;
 }
 
+bool oct_has_sub(oct_node node){
+  return node.tree->sub_group[node.item] != -1;
+}
 
 oct_node oct_peek_sub(oct_node node, int idx){
   octree * tree = node.tree;
