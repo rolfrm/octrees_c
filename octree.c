@@ -40,16 +40,31 @@ void oct_render_node(oct_node * oc, float size, vec3 offset,
 		     void (* f)(oct_node * oc, float size, vec3 offset)){
   f(oc, size, offset);
   int idxes[] = {1, 0, 5, 4, 3, 2, 7, 6};
+  static bool loaded = false;
+  static vec3 v3s[8];
+  if(!loaded){
+    loaded = true;
+    for(int i = 0; i < 8; i++)
+      v3s[i] = vec3i_to_vec3(vec3i_from_index(idxes[i]));
+  }
   ASSERT(array_count(idxes) == 8);
   float size2 = size * 0.5;
+  vec3 vs[8];
+  oct_node * n[8];
   for(size_t i = 0; i < array_count(idxes); i++){
-    int idx = idxes[i];
-    oct_node * n = oct_peek_sub(oc, idx);
-    if(n){
-      vec3 off = vec3i_to_vec3(vec3i_from_index(idx));
-      oct_render_node(n, size2, vec3_add(offset, vec3_scale(off, size2)), f);
-    }
+    vs[i] = offset;
+    vs[i].x += v3s[i].x * size2;
+    vs[i].y += v3s[i].y * size2;
+    vs[i].z += v3s[i].z * size2;
   }
+  
+  for(size_t i = 0; i < array_count(idxes); i++){
+    n[i] = oct_peek_sub(oc, idxes[i]);
+  }
+   for(size_t i = 0; i < array_count(idxes); i++){
+     if(n[i] != NULL)
+       oct_render_node(n[i], size2, vs[i], f);
+   }
 }
 
 static vec3 to_super_coords (int idx, vec3 coords){

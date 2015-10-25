@@ -343,19 +343,20 @@ int main(){
   int unused_1;
   ht_insert(gd->enemies, &ne, &unused_1);
   ht_insert(gd->enemies, &n_3, &unused_1);
-  while(true){
+  for(int i = 0; i < 10000; i++){
     vec2i p = renderer_get_mouse_position(rnd2);
     vec2 p2 = vec2mk(p.x / 28.0, (p.y - 40) / 28.0 );
     vec3i p3 =inv_iso(p2, yoff);
     select_cube->offset = vec3i_to_vec3(p3);
     remove_entity((entity_header *)select_cube);
-    logd(" +++ "); vec3i_print(p3);logd("\n");
+    logd("I: %i\n", i);
+    //logd(" +++ "); vec3i_print(p3);logd("\n");
     oct_node * oc2 = oct_find_fitting_node(n->node, &select_cube->offset, &select_cube->size);
     add_entity(oc2, (entity_header *) select_cube);
 
 
     vec3 offset = oct_node_offset(n_2->node, orig->node);
-    logd("Offset: "); vec3_print(offset);vec3_print(n->offset);logd("\n");
+    //logd("Offset: "); vec3_print(offset);vec3_print(n->offset);logd("\n");
     oct_node * super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-offset.y, 0}), 4);
     for(int i = -4; i <= 4; i++)
       for(int j = -4; j <= 4; j++){
@@ -370,7 +371,7 @@ int main(){
 	update_entity_positions(r);
       }
     UNUSED(state);
-    renderer_render(rnd2, &state);
+    //renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     gd->controller = renderer_game_controller();
@@ -406,7 +407,7 @@ int main(){
 	continue;
       }
     }
-    game_controller_state_print(gd->controller);logd("\n");
+    //game_controller_state_print(gd->controller);logd("\n");
     entity_list * el = oct_get_payload(oct_get_relative(n->node, (vec3i){0, -1, 0}));
     bool standing_on_ground = false;
     if(el != NULL){
@@ -453,9 +454,9 @@ int main(){
       n->offset = newoffset;
       n_2->offset = newoffset;
     }
-    oct_clean_tree(oct_get_nth_super(n->node, 5));
+    //oct_clean_tree(oct_get_nth_super(n->node, 5));
     state.center_node = n->node;
-    usleep(100000);
+    //usleep(100000);
   }
     
   return 0;
