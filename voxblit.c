@@ -112,59 +112,14 @@ void load_node(oct_node node, game_data * game_data, int lod_offset){
       }else if(rand() % 4000 == 0){
 	insert_entity(node, vec3mk(i, 1, j), vec3mk(1, 1, 1), game_data->sprites[GD_FIREPLACE]);
       
-      }else if(rand() % 2024 == 0){
-	/*int len = rand() % 10;
-	for(int i2 = 0; i2 < len; i2++)
-	  for(int j2 = 0; j2 < len - i2; j2++)
-	    for(int k2 = 0; k2 < len - i2; k2++)
-	      insert_tile(node, vec3i_make(i + k2 + i2/2, 1  + i2, j + j2 + i2/2), game_data->tiles[5]);
-	*/
-	//for(int l = 0; l < 100; l++)
-	//insert_tile(node, vec3i_make(i + l, 1  + l, j), game_data->tiles[5]);
       }else if(rand() % 2000 == 0){
 	entity * n2 = insert_entity(node, vec3mk(i, 1, j), 
 				    vec3mk(1, 1, 1), 
 				    game_data->sprites[(rand() & 1) == 0 ? GD_BUG : GD_CAT]);
-      int unused_1;
-      ht_insert(game_data->enemies, &n2, &unused_1);
+	int unused_1;
+	ht_insert(game_data->enemies, &n2, &unused_1);
       }
     }
-  /*
-  for(int j = 0; j < 10; j++)
-    for(int i = 0; i < j; i++)
-      insert_tile(oct_get_sub(n1,0), vec3i_make(0, 2 + i, -2 - j), rock_small);
-  int size = 100;
-  for(int i = -size; i < size; i++)
-    for(int j = -size; j < size; j++){
-      int biome = ((i+j) / 10) & 3;
-      insert_tile(n1, vec3i_make(i, 0, j), biome == 1 ? tile5 : tile22);
-      if(rand() % 40 == 0){
-	insert_tile(n1, vec3i_make(i, 1, j), tile25);
-	if(rand() % 1 == 0){
-	  insert_tile(n1, vec3i_make(i, 2, j), tile25);
-	  if(rand() % 1 == 0){
-	    insert_tile(n1, vec3i_make(i, 3, j), tile22);
-	    if(rand()% 1 == 0){
-	      insert_tile(n1, vec3i_make(i + 1, 3, j), tile22);
-	      insert_tile(n1, vec3i_make(i + 2, 3, j), tile22);
-	      insert_tile(n1, vec3i_make(i + 2, 2, j), tile25);
-	      insert_tile(n1, vec3i_make(i + 2, 1, j), tile25);
-	    }
-	  }
-	}
-      }else if(rand() % 20 == 0){
-	insert_tile(n1, vec3i_make(i, 1, j), tile5);
-	insert_tile(n1, vec3i_make(i, 1, j+1), tile5);
-	insert_tile(n1, vec3i_make(i+1, 1, j), tile5);
-	insert_tile(n1, vec3i_make(i+1, 1, j+1), tile5);
-	if(rand() % 10 == 0)
-	  insert_tile(n1, vec3i_make(i, 2, j), tile5);
-      }else if(rand() % 20 == 0){
-	for(int k = 0 ; k < rand() % 20; k++)
-	  insert_tile(n1, vec3i_make(i, 1 + k, j), tile5);
-      }
-    }
-  */
 }
 
 game_data * load_game_data(game_renderer * rnd2){

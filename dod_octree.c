@@ -9,7 +9,7 @@ typedef struct _octree{
   i64 * super_group;
   // points down. cnt: count
   // values are group and not item, so max_value(sub_group) is max_value(super_group)/8.
-  i32 * sub_group; 
+  i64 * sub_group; 
   // payload for node. cnt: count
   void ** payload; 
   
@@ -185,11 +185,9 @@ void oct_delete_sub(oct_node node, int idx){
   node.tree->sub_group[node.item] = -1;
 }
 
-
 void * oct_get_payload(oct_node node){
   return node.tree->payload[node.item];
 }
-
 
 void oct_set_payload(oct_node node, void * payload){
   node.tree->payload[node.item] = payload;
