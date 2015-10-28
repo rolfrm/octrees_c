@@ -1,0 +1,58 @@
+<html>
+<script type="text/javascript">
+
+function request(request, callback){
+   xmlhttp = new XMLHttpRequest();
+   xmlhttp.responseType = 'arraybuffer';
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+           if(xmlhttp.status == 200){
+               callback(xmlhttp.response);                  
+           }
+           else if(xmlhttp.status == 400) {
+              alert('There was an error 400')
+           }
+           else {
+               alert('something else other than 200 was returned')
+           }
+        }
+    }
+   xmlhttp.open("GET", request, true);
+   xmlhttp.send();
+}
+
+function get_world_loc(){
+  function world_loc_cb(response){
+    data = new Int8Array(response);
+    document.getElementById("d1").innerHTML = data.toString();
+ 
+  }
+  request("world_loc", world_loc_cb);
+
+}
+
+function set_world_loc(loc){
+
+}
+
+function get_relative_loc(loc, x, y, z){
+
+}
+
+function get_relative_lod(loc, r_lod){
+
+}
+
+function read_world_state(world_loc, w, h, d){
+
+}
+window.onload = get_world_loc;
+
+</script>
+
+
+<body>
+ <div id="d1"/>
+</body>
+
+</html>

@@ -10,6 +10,7 @@
 #include "game_state.h"
 #include "renderer.h"
 #include "image.h"
+#include "game_editor.h"
 
 void _error(const char * file, int line, const char * str, ...){
   loge("** ERROR at %s:%i **\n",file,line);
@@ -291,7 +292,8 @@ int main(){
 
   world_state state = { n1 };
   game_data * gd = load_game_data(rnd2);
-  
+  game_editor ed = start_game_editor(&state);
+  UNUSED(ed);
   entity * n = insert_entity(n1, vec3mk(1, -4, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
   entity * n_2 = insert_entity(n1, vec3mk(1, -3, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
   entity * n_3 = insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
@@ -303,7 +305,7 @@ int main(){
   int unused_1;
   //ht_insert(gd->enemies, &ne, &unused_1);
   ht_insert(gd->enemies, &n_3, &unused_1);
-  for(int i = 0; i < 10000; i++){
+  while(true){
     //logd("I: %i\n", i);
     vec2i p = renderer_get_mouse_position(rnd2);
     vec2 p2 = vec2mk(p.x / 28.0, (p.y - 40) / 28.0 );
@@ -332,7 +334,7 @@ int main(){
 	update_entity_positions(r);
       }
     UNUSED(state);
-    renderer_render(rnd2, &state);
+    //renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     gd->controller = renderer_game_controller();
