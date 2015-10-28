@@ -1,7 +1,7 @@
 <html>
 <script type="text/javascript">
 
-function request(request, callback){
+function request(request, callback, item = []){
    xmlhttp = new XMLHttpRequest();
    xmlhttp.responseType = 'arraybuffer';
     xmlhttp.onreadystatechange = function() {
@@ -18,17 +18,20 @@ function request(request, callback){
         }
     }
    xmlhttp.open("GET", request, true);
-   xmlhttp.send();
+   if(item)
+     xmlhttp.send(item);
+   else
+     xmlhttp.send();
 }
 
 function get_world_loc(){
   function world_loc_cb(response){
-    data = new Int8Array(response);
-    document.getElementById("d1").innerHTML = data.toString();
- 
+    data = new Int32Array(response);
+    document.getElementById("d1").innerHTML = (data[0] + data[1]).toString();
+    value = data[0] + data[1] << 32;
+    get_relative_loc(value,1,1,1);
   }
   request("world_loc", world_loc_cb);
-
 }
 
 function set_world_loc(loc){
@@ -36,7 +39,21 @@ function set_world_loc(loc){
 }
 
 function get_relative_loc(loc, x, y, z){
+  var arr = new Int32Array(5);
+  arr[0] = loc & 0xFFFFFFFF;
+  arr[1] = loc >> 32;
+  arr[2] = x;
+  arr[3] = y;
+  arr[4] = z;
 
+  function rel_cb(response){
+     data = new Int32Array(response);
+     document.getElementById("d1").innerHTML = (data[0] + data[1]).toString();
+     value = data[0] + data[1] << 32;
+     alert(value);
+  }
+
+  request("rel_loc", rel_cb, arr.buffer);
 }
 
 function get_relative_lod(loc, r_lod){

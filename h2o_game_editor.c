@@ -29,7 +29,7 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
   logd("Url: %s\n", url);
   int world_loc = strcmp("world_loc", url + 1);
   struct MHD_Response * response;
-  logd("world loc: %i\n", world_loc);
+  logd("world loc: %i %i\n", ed->world->center_node.ptr2, *upload_data_size);
   
   if( world_loc == 0){
     response = MHD_create_response_from_data(sizeof(void *),
