@@ -18,14 +18,8 @@ function request(request, callback, item = [], size = 0){
         }
     }
    xmlhttp.open("GET", request, true);
-   if(size != 0){
-     xmlhttp.setRequestHeader("Content-length", size);
-     xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-   }
-   if(item)
-     xmlhttp.send(item);
-   else
-     xmlhttp.send();
+   
+   xmlhttp.send(item);
 }
 
 function get_world_loc(){
@@ -52,12 +46,11 @@ function get_relative_loc(loc, x, y, z){
 
   function rel_cb(response){
      data = new Int32Array(response);
-     document.getElementById("d1").innerHTML = (data[0] + data[1]).toString();
      value = data[0] + data[1] << 32;
-     //alert(value);
+     document.getElementById("d1").innerHTML = value.toString();
   }
 
-  request("rel_loc", rel_cb, arr.buffer, 4 * 5);
+  request("rel_loc" + loc + ":" + x + ":" + y + ":" + z, rel_cb, arr.buffer, 4 * 5);
 }
 
 function get_relative_lod(loc, r_lod){
@@ -65,7 +58,7 @@ function get_relative_lod(loc, r_lod){
 }
 
 function read_world_state(world_loc, w, h, d){
-
+  request("lookup" + world_loc + ":" + w + ":" + h + ":"+ d, read_world_state_cb);
 }
 window.onload = get_world_loc;
 

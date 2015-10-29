@@ -19,8 +19,19 @@ typedef struct{
   world_state * world;
 }g_ed;
 
-int * rel_cb(void * cls, u64 pos, char * buf, size_t max){
+size_t rel_cb(void * cls, uint64_t pos, int * buf, size_t max){
+  UNUSED(cls);UNUSED(pos);UNUSED(buf);UNUSED(max);
+  logd("%i %i %i %i %i %i\n", max, buf[0], buf[1],buf[2], buf[3], buf[4]);
+  return max;
+}
 
+bool compare_strs(char * s1, char * s2){
+  while(*s1 == *s2 && *s1 && *s2){
+    s1++; s2++;
+  }
+  if(*s1 == 0) return true;
+  return false;
+    
 }
 
 int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
@@ -30,31 +41,40 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
   UNUSED(url); UNUSED(version); UNUSED(upload_data); UNUSED(upload_data_size);
   UNUSED(method); UNUSED(con_cls); 
   g_ed * ed = _ed;
-  logd("Url: %s\n", url);
-  int world_loc = strcmp("world_loc", url + 1);
-  int rel_loc = strcmp("rel_loc", url + 1);
+  logd("Url: %s %s %s\n", url, method, version);
+  bool world_loc = compare_strs((char *) "world_loc", (char *)url + 1);
+  bool rel_loc = compare_strs((char *) "rel_loc", (char *) url + 1);
   struct MHD_Response * response;
-  logd("world loc: %i %i %i\n", ed->world->center_node.ptr2, *upload_data_size, rel_loc);
+  logd("world loc: %i %i \n", world_loc, rel_loc);
   
-  if( world_loc == 0){
+  if(world_loc){
     response = MHD_create_response_from_data(sizeof(void *),
 					     (void*) &ed->world->center_node.ptr2,
-					     0,
-					     MHD_NO);
-  }else if(rel_loc == 0){
-    int * r = MHD_create_response_from_callback(128, 128,
-				   rel_cb, ed,
-				      NULL);
-				   }
-  else{
+					     0, MHD_NO);
+  }else if(rel_loc){
+    char * end;
+    size_t loc = strtol(url + 1 + 7, &end, 10);
+    int x = strtol(end + 1, &end, 10);
+    int y = strtol(end + 1, &end, 10);
+    int z = strtol(end + 1, &end, 10);
+    oct_node n = ed->world->center_node;
+    n.ptr2 = (void *) loc;
+    n = oct_get_relative(n, (vec3i){x, y, z});
+    loc = (size_t)n.ptr2;
+    response = MHD_create_response_from_data(sizeof(void *),
+					     (void*) &loc,
+					     0, MHD_NO);
+  }else{
+    
     char * file = (char *) "page.html";
     char * pg = read_file_to_string(file);
-
+    
     response = MHD_create_response_from_data(strlen(pg),
 					     pg,
 					     1,
 					     MHD_NO);
   }
+  
   int ret = MHD_queue_response(con, MHD_HTTP_OK, response);
   MHD_destroy_response(response);
   return ret;
