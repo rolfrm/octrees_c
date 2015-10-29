@@ -19,6 +19,10 @@ typedef struct{
   world_state * world;
 }g_ed;
 
+int * rel_cb(void * cls, u64 pos, char * buf, size_t max){
+
+}
+
 int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
 		      const char * method, const char * version,
 		      const char *upload_data, size_t * upload_data_size,
@@ -28,15 +32,21 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
   g_ed * ed = _ed;
   logd("Url: %s\n", url);
   int world_loc = strcmp("world_loc", url + 1);
+  int rel_loc = strcmp("rel_loc", url + 1);
   struct MHD_Response * response;
-  logd("world loc: %i %i\n", ed->world->center_node.ptr2, *upload_data_size);
+  logd("world loc: %i %i %i\n", ed->world->center_node.ptr2, *upload_data_size, rel_loc);
   
   if( world_loc == 0){
     response = MHD_create_response_from_data(sizeof(void *),
 					     (void*) &ed->world->center_node.ptr2,
 					     0,
 					     MHD_NO);
-  }else{
+  }else if(rel_loc == 0){
+    int * r = MHD_create_response_from_callback(128, 128,
+				   rel_cb, ed,
+				      NULL);
+				   }
+  else{
     char * file = (char *) "page.html";
     char * pg = read_file_to_string(file);
 
