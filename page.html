@@ -1,7 +1,7 @@
 <html>
 <script type="text/javascript">
 
-function request(request, callback, item = [], size = 0){
+function request(request, callback){
    xmlhttp = new XMLHttpRequest();
    xmlhttp.responseType = 'arraybuffer';
     xmlhttp.onreadystatechange = function() {
@@ -19,7 +19,11 @@ function request(request, callback, item = [], size = 0){
     }
    xmlhttp.open("GET", request, true);
    
-   xmlhttp.send(item);
+   xmlhttp.send();
+}
+
+function read_world_state(world_loc, w, h, d, cb){
+  request("lookup" + world_loc + "_" + w + "_" + h + "_" + d, cb);
 }
 
 function get_world_loc(){
@@ -28,6 +32,14 @@ function get_world_loc(){
     document.getElementById("d1").innerHTML = (data[0] + data[1]).toString();
     value = data[0] + data[1] << 32;
     get_relative_loc(value,1,1,1);
+
+    function state_cb(response){
+      data2 = new Int32Array(response);
+      document.getElementById("d1").innerHTML = data2.join();
+    }
+
+    read_world_state(value, 5, 5, 5, state_cb);
+
   }
   request("world_loc", world_loc_cb);
 }
@@ -50,16 +62,14 @@ function get_relative_loc(loc, x, y, z){
      document.getElementById("d1").innerHTML = value.toString();
   }
 
-  request("rel_loc" + loc + ":" + x + ":" + y + ":" + z, rel_cb, arr.buffer, 4 * 5);
+  request("rel_loc" + loc + ":" + x + ":" + y + ":" + z, rel_cb);
 }
 
 function get_relative_lod(loc, r_lod){
 
 }
 
-function read_world_state(world_loc, w, h, d){
-  request("lookup" + world_loc + ":" + w + ":" + h + ":"+ d, read_world_state_cb);
-}
+
 window.onload = get_world_loc;
 
 </script>

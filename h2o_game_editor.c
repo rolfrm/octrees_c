@@ -44,6 +44,7 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
   logd("Url: %s %s %s\n", url, method, version);
   bool world_loc = compare_strs((char *) "world_loc", (char *)url + 1);
   bool rel_loc = compare_strs((char *) "rel_loc", (char *) url + 1);
+  bool lookup_loc = compare_strs((char *) "lookup", (char *) url + 1);
   struct MHD_Response * response;
   logd("world loc: %i %i \n", world_loc, rel_loc);
   
@@ -51,19 +52,40 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
     response = MHD_create_response_from_data(sizeof(void *),
 					     (void*) &ed->world->center_node.ptr2,
 					     0, MHD_NO);
-  }else if(rel_loc){
+  }else if(rel_loc | lookup_loc){
     char * end;
-    size_t loc = strtol(url + 1 + 7, &end, 10);
+    size_t loc = strtol(url + 1 + (rel_loc ? 7 : 6), &end, 10);
     int x = strtol(end + 1, &end, 10);
     int y = strtol(end + 1, &end, 10);
     int z = strtol(end + 1, &end, 10);
     oct_node n = ed->world->center_node;
     n.ptr2 = (void *) loc;
-    n = oct_get_relative(n, (vec3i){x, y, z});
-    loc = (size_t)n.ptr2;
-    response = MHD_create_response_from_data(sizeof(void *),
-					     (void*) &loc,
-					     0, MHD_NO);
+    if(rel_loc){
+      n = oct_get_relative(n, (vec3i){x, y, z});
+      loc = (size_t)n.ptr2;
+      response = MHD_create_response_from_data(sizeof(void *),
+					       (void*) &loc,
+					       0, MHD_NO);
+    }else{
+      vec3 pos = vec3mk(0, 0, 0);
+      vec3 size = vec3mk(x, y, z);
+      logd("%i %i %i\n", x, y, z);
+      int tiles[x * y * z];
+      memset(tiles,0,sizeof(x * y * z * sizeof(int)));
+      void _cb(oct_node node, vec3 p, vec3 s){
+	UNUSED(node);
+	if(s.x == size.x){
+	  int _x =  -(int)p.x;
+	  int _y =  -(int)p.y;
+	  int _z =  -(int)p.z;
+	  logd("End lookup.. %i %i %i %i\n", _x, _y, _z, _x + x*_y + x*y*_z);
+	  tiles[_x + x*_y + x*y*_z] = 1;
+	}
+      }
+      oct_lookup_blocks(n, pos, size, _cb);
+      logd("End lookup..\n");
+      response = MHD_create_response_from_data(x * y * z * sizeof(int),(void*) tiles,0, MHD_NO);
+    }
   }else{
     
     char * file = (char *) "page.html";
