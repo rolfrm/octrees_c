@@ -38,7 +38,7 @@ function get_world_loc(){
       document.getElementById("d1").innerHTML = data2.join();
     }
 
-    read_world_state(value, 5, 5, 5, state_cb);
+    read_world_state(value, 5, 1, 5, state_cb);
 
   }
   request("world_loc", world_loc_cb);

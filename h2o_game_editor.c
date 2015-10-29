@@ -70,8 +70,8 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
       vec3 pos = vec3mk(0, 0, 0);
       vec3 size = vec3mk(x, y, z);
       logd("%i %i %i\n", x, y, z);
-      int tiles[x * y * z];
-      memset(tiles,0,sizeof(x * y * z * sizeof(int)));
+      int * tiles = alloc0(x * y * z * sizeof(int));
+      //memset(tiles, 0, x * y * z * sizeof(int));
       void _cb(oct_node node, vec3 p, vec3 s){
 	UNUSED(node);
 	if(s.x == size.x){
@@ -82,9 +82,10 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
 	  tiles[_x + x*_y + x*y*_z] = 1;
 	}
       }
+      UNUSED(_cb); UNUSED(pos);
       oct_lookup_blocks(n, pos, size, _cb);
       logd("End lookup..\n");
-      response = MHD_create_response_from_data(x * y * z * sizeof(int),(void*) tiles,0, MHD_NO);
+      response = MHD_create_response_from_data(x * y * z * sizeof(int),(void*) tiles,0, MHD_YES);
     }
   }else{
     
