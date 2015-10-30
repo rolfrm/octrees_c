@@ -19,12 +19,6 @@ typedef struct{
   world_state * world;
 }g_ed;
 
-size_t rel_cb(void * cls, uint64_t pos, int * buf, size_t max){
-  UNUSED(cls);UNUSED(pos);UNUSED(buf);UNUSED(max);
-  logd("%i %i %i %i %i %i\n", max, buf[0], buf[1],buf[2], buf[3], buf[4]);
-  return max;
-}
-
 bool compare_strs(char * s1, char * s2){
   while(*s1 == *s2 && *s1 && *s2){
     s1++; s2++;
@@ -74,7 +68,7 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
       //memset(tiles, 0, x * y * z * sizeof(int));
       void _cb(oct_node node, vec3 p, vec3 s){
 	UNUSED(node);
-	if(s.x == size.x){
+	if(s.x == size.x && oct_get_payload(node) != NULL){
 	  int _x =  -(int)p.x;
 	  int _y =  -(int)p.y;
 	  int _z =  -(int)p.z;

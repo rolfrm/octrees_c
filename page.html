@@ -26,20 +26,12 @@ function read_world_state(world_loc, w, h, d, cb){
   request("lookup" + world_loc + "_" + w + "_" + h + "_" + d, cb);
 }
 
-function get_world_loc(){
+function get_world_loc(cb){
   function world_loc_cb(response){
     data = new Int32Array(response);
     document.getElementById("d1").innerHTML = (data[0] + data[1]).toString();
     value = data[0] + data[1] << 32;
-    get_relative_loc(value,1,1,1);
-
-    function state_cb(response){
-      data2 = new Int32Array(response);
-      document.getElementById("d1").innerHTML = data2.join();
-    }
-
-    read_world_state(value, 5, 1, 5, state_cb);
-
+    cb(value);
   }
   request("world_loc", world_loc_cb);
 }
@@ -48,7 +40,7 @@ function set_world_loc(loc){
 
 }
 
-function get_relative_loc(loc, x, y, z){
+function get_relative_loc(loc, x, y, z, cb){
   var arr = new Int32Array(5);
   arr[0] = loc & 0xFFFFFFFF;
   arr[1] = loc >> 32;
@@ -59,7 +51,7 @@ function get_relative_loc(loc, x, y, z){
   function rel_cb(response){
      data = new Int32Array(response);
      value = data[0] + data[1] << 32;
-     document.getElementById("d1").innerHTML = value.toString();
+     cb(value);
   }
 
   request("rel_loc" + loc + ":" + x + ":" + y + ":" + z, rel_cb);
@@ -70,13 +62,49 @@ function get_relative_lod(loc, r_lod){
 }
 
 
-window.onload = get_world_loc;
+current_loc = 0;
+
+function set_region(arr, w, h, d){
+   m = ""
+   for(i = 0; i < d; i++){
+     str = "<p>";
+     for(j = 0; j < w; j++){
+       str = str + arr[ j + 0 + i * h * d].toString();
+     }
+     str = str + "</p>";
+     m = m + str;
+   }
+  alert(m);
+  document.getElementById("d2").innerHTML = m;
+}
+
+function set_loc(x){
+   current_loc = x;
+   document.getElementById("d1").innerHTML = current_loc.toString();
+   function load_arr(arr){ set_region(arr, 5, 1, 5);}
+   read_world_state(current_loc, 5, 1, 5, load_arr);
+}
+
+function move(x, y, z){
+   get_relative_loc(current_loc, x, y, z, set_loc);
+}
+alert(1);
+window.onload = function(){get_world_loc(set_loc);};
 
 </script>
 
 
 <body>
+<button onclick="move(1 ,0 ,0)">+x</button>
+<button onclick="move(0 ,1 ,0)">+y</button>
+<button onclick="move(0 ,0 ,1)">+z</button>
+<div id="_"/>
+<button onclick="move(-1 ,0 ,0)">-x</button>
+<button onclick="move(0 ,-1 ,0)">-y</button>
+<button onclick="move(0 ,0 ,-1)">-z</button>
  <div id="d1"/>
+<div id="_2"/>
+ <div id="d2"/>
 </body>
 
 </html>
