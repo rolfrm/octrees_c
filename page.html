@@ -69,8 +69,8 @@ function get_relative_lod(loc, r_lod){
 
 current_loc = 0;
 
-function set_region(arr, w, h, d){
-   m = ""
+function set_region(arr, w, h, d, level){
+   m = "<p class=\"level" + level + "\">";
    for(i = 0; i < d; i++){
      str = "<p>";
      for(j = 0; j < w; j++){
@@ -83,21 +83,34 @@ function set_region(arr, w, h, d){
      m = m + str;
    }
 
-  document.getElementById("mapdiv").innerHTML = m;
+  document.getElementById("mapdiv" + level).innerHTML = m + "</p>";
 }
 
 function set_loc(x){
    current_loc = x;
    document.getElementById("d1").innerHTML = current_loc.toString();
-   function load_arr(arr){ set_region(arr, 100, 1, 100);}
-   read_world_state(current_loc, 100, 1, 100, load_arr);
+	  
+   function load_arr2(arr){set_region(arr, 100, 1, 100, 2);}
+     function load_state2(loc){
+     read_world_state(loc, 100, 1, 100, load_arr2);	  	  
+   }
+
+   function load_arr(arr){ 
+    set_region(arr, 100, 1, 100, 1);
+    get_relative_loc(current_loc,0,1,0,load_state2);
+    }
+      read_world_state(current_loc, 100, 1, 100, load_arr);
 }
 
 function move(x, y, z){
    get_relative_loc(current_loc, x, y, z, set_loc);
 }
 
-window.onload = function(){get_world_loc(set_loc);};
+window.onload = function(){
+ 
+ get_world_loc(set_loc);
+ //setInterval(function(){move(0,0,0);}, 250);
+};
 
 </script>
 
@@ -116,7 +129,8 @@ window.onload = function(){get_world_loc(set_loc);};
  <button onclick="move(0,0,0)">...</button>
  <div id="d1"></div>
  <div id="_2"></div>
- <div id="mapdiv"><p>map</p></div>
+ <div id="mapdiv1"><p>map</p></div>
+ <div id="mapdiv2"><p>map</p></div>
 </body>
 
 </html>
