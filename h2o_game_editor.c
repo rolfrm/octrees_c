@@ -39,6 +39,7 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
   bool world_loc = compare_strs((char *) "world_loc", (char *)url + 1);
   bool rel_loc = compare_strs((char *) "rel_loc", (char *) url + 1);
   bool lookup_loc = compare_strs((char *) "lookup", (char *) url + 1);
+  bool style_loc = compare_strs((char *) "style.css", (char *) url + 1);
   struct MHD_Response * response;
   logd("world loc: %i %i \n", world_loc, rel_loc);
   
@@ -61,18 +62,15 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
 					       (void*) &loc,
 					       0, MHD_NO);
     }else{
-      vec3 pos = vec3mk(0, 0, 0);
+      vec3 pos = vec3mk(-x/2, -y/2, -z/2);
       vec3 size = vec3mk(x, y, z);
-      logd("%i %i %i\n", x, y, z);
       int * tiles = alloc0(x * y * z * sizeof(int));
-      //memset(tiles, 0, x * y * z * sizeof(int));
       void _cb(oct_node node, vec3 p, vec3 s){
 	UNUSED(node);
 	if(s.x == size.x && oct_get_payload(node) != NULL){
 	  int _x =  -(int)p.x;
 	  int _y =  -(int)p.y;
 	  int _z =  -(int)p.z;
-	  logd("End lookup.. %i %i %i %i\n", _x, _y, _z, _x + x*_y + x*y*_z);
 	  tiles[_x + x*_y + x*y*_z] = 1;
 	}
       }
@@ -83,7 +81,7 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
     }
   }else{
     
-    char * file = (char *) "page.html";
+    char * file = (char *) (style_loc ?  "style.css" : "page.html");
     char * pg = read_file_to_string(file);
     
     response = MHD_create_response_from_data(strlen(pg),

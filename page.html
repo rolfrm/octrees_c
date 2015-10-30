@@ -1,4 +1,6 @@
 <html>
+<head>
+<link rel="STYLESHEET" type="text/css" href="./style.css">
 <script type="text/javascript">
 
 function request(request, callback){
@@ -23,7 +25,10 @@ function request(request, callback){
 }
 
 function read_world_state(world_loc, w, h, d, cb){
-  request("lookup" + world_loc + "_" + w + "_" + h + "_" + d, cb);
+  function cb2(response){
+   cb(new Int32Array(response));
+  }
+  request("lookup" + world_loc + "_" + w + "_" + h + "_" + d, cb2);
 }
 
 function get_world_loc(cb){
@@ -69,42 +74,49 @@ function set_region(arr, w, h, d){
    for(i = 0; i < d; i++){
      str = "<p>";
      for(j = 0; j < w; j++){
-       str = str + arr[ j + 0 + i * h * d].toString();
+       idx = j + 0 + i * h * d;
+       v = arr[idx];
+       
+       str = str + arr[idx];
      }
      str = str + "</p>";
      m = m + str;
    }
-  alert(m);
-  document.getElementById("d2").innerHTML = m;
+
+  document.getElementById("mapdiv").innerHTML = m;
 }
 
 function set_loc(x){
    current_loc = x;
    document.getElementById("d1").innerHTML = current_loc.toString();
-   function load_arr(arr){ set_region(arr, 5, 1, 5);}
-   read_world_state(current_loc, 5, 1, 5, load_arr);
+   function load_arr(arr){ set_region(arr, 100, 1, 100);}
+   read_world_state(current_loc, 100, 1, 100, load_arr);
 }
 
 function move(x, y, z){
    get_relative_loc(current_loc, x, y, z, set_loc);
 }
-alert(1);
+
 window.onload = function(){get_world_loc(set_loc);};
 
 </script>
 
+</head>
+
 
 <body>
-<button onclick="move(1 ,0 ,0)">+x</button>
-<button onclick="move(0 ,1 ,0)">+y</button>
-<button onclick="move(0 ,0 ,1)">+z</button>
-<div id="_"/>
-<button onclick="move(-1 ,0 ,0)">-x</button>
-<button onclick="move(0 ,-1 ,0)">-y</button>
-<button onclick="move(0 ,0 ,-1)">-z</button>
- <div id="d1"/>
-<div id="_2"/>
- <div id="d2"/>
+ <button onclick="move(1 ,0 ,0)">+x</button>
+ <button onclick="move(0 ,1 ,0)">+y</button>
+ <button onclick="move(0 ,0 ,1)">+z</button>
+ <div id="_"/>
+ <button onclick="move(-1 ,0 ,0)">-x</button>
+ <button onclick="move(0 ,-1 ,0)">-y</button>
+ <button onclick="move(0 ,0 ,-1)">-z</button>
+ <p></p>
+ <button onclick="move(0,0,0)">...</button>
+ <div id="d1"></div>
+ <div id="_2"></div>
+ <div id="mapdiv"><p>map</p></div>
 </body>
 
 </html>
