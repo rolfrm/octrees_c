@@ -1,0 +1,66 @@
+/*
+**
+** Author: Andrea Ferretti
+** Author: Hongwei Xi (for minor changes)
+**
+*/
+
+/* ****** ****** */
+
+body {
+  font-family:
+  monospace;
+  margin: 0 auto;
+  max-width: 800px;
+  text-align: justify;
+  line-height: 0%;
+  font-size: 50%;
+}
+
+font {
+  font-family:
+  monospace;
+  font-size: 25%;
+  padding: 2px 4px;
+  background-color: #e0e0e0;
+}
+
+a {
+  color: #707070;
+  font-style: italic;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+h1 a {
+  color: black;
+  font-style: normal;
+}
+
+.level1{
+  opacity: 1.0;
+  top: 50px;
+  position:absolute;
+}
+
+.level2{
+  opacity: 0.75;
+  position:absolute;
+}
+
+.level3{
+  opacity: 0.25;
+}
+
+/* ****** ****** */
+
+.programlisting {
+  padding: 4px 8px;
+  line-height: 144%;
+  border-radius: 6px;
+  background-color: #e0e0e0;
+}
+
+/* ****** ****** */
+
+/* end of [INT2PROGINATS-BOOK.css] */
