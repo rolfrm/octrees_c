@@ -48,7 +48,7 @@ game_renderer * renderer_load(int width, int height, int unit_size){
   game_renderer * rnd = alloc0(sizeof(game_renderer));
   rnd->window = SDL_CreateWindow("--", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, 
 				 SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
-  rnd->renderer = SDL_CreateRenderer(rnd->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  rnd->renderer = SDL_CreateRenderer(rnd->window, -1, 0);
   rnd->unit_size = unit_size;
   return rnd;
 }

@@ -334,7 +334,7 @@ int main(){
 	update_entity_positions(r);
       }
     UNUSED(state);
-    //renderer_render(rnd2, &state);
+    renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     gd->controller = renderer_game_controller();
@@ -343,6 +343,7 @@ int main(){
       oct_node node1;
       entity_list * payload;
     entity_list * lst;
+    logd("EVENT %i\n", i);
       switch(evt[i].type){
       case QUIT:
 	return 0;

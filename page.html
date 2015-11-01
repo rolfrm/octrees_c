@@ -70,36 +70,44 @@ function get_relative_lod(loc, r_lod){
 current_loc = 0;
 
 function set_region(arr, w, h, d, level){
-   m = "<p class=\"level" + level + "\">";
+   m = "<div class=\"level" + level + "\">";
    for(i = 0; i < d; i++){
      str = "<p>";
      for(j = 0; j < w; j++){
        idx = j + 0 + i * h * d;
        v = arr[idx];
        
-       str = str + arr[idx];
+       str = str + (arr[idx] == 0 ? "&nbsp;" : "#");
      }
      str = str + "</p>";
      m = m + str;
    }
-
-  document.getElementById("mapdiv" + level).innerHTML = m + "</p>";
+  document.getElementById("mapdiv" + level).innerHTML = m + "</div>";
 }
 
 function set_loc(x){
    current_loc = x;
    document.getElementById("d1").innerHTML = current_loc.toString();
 	  
-   function load_arr2(arr){set_region(arr, 100, 1, 100, 2);}
+   function load_arr3(arr){set_region(arr, 50, 1, 50, 3);}
+     function load_state3(loc){
+     read_world_state(loc, 50, 1, 50, load_arr3);	  	  
+   }
+
+   function load_arr2(arr){
+     set_region(arr, 50, 1, 50, 2);
+     get_relative_loc(current_loc,0,2,0, load_state3);
+      }
      function load_state2(loc){
-     read_world_state(loc, 100, 1, 100, load_arr2);	  	  
+     read_world_state(loc, 50, 1, 50, load_arr2);	  	  
    }
 
    function load_arr(arr){ 
-    set_region(arr, 100, 1, 100, 1);
+    set_region(arr, 50, 1, 50, 1);
     get_relative_loc(current_loc,0,1,0,load_state2);
     }
-      read_world_state(current_loc, 100, 1, 100, load_arr);
+
+   read_world_state(current_loc, 50, 1, 50, load_arr);
 }
 
 function move(x, y, z){
@@ -129,8 +137,10 @@ window.onload = function(){
  <button onclick="move(0,0,0)">...</button>
  <div id="d1"></div>
  <div id="_2"></div>
- <div id="mapdiv1"><p>map</p></div>
+ <div id="mapdiv3"><p>map</p></div>
  <div id="mapdiv2"><p>map</p></div>
+ <div id="mapdiv1"><p>map</p></div>
+
 </body>
 
 </html>
