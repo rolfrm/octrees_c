@@ -4,7 +4,8 @@ typedef struct _texture_asset texture_asset;
 typedef enum _entity_type{
   TILE,
   OBJECT,
-  SATELITE
+  SATELITE,
+  HASH64
 }entity_type;
 
 typedef struct {
@@ -45,3 +46,9 @@ struct _entity{
 typedef struct _world_state{
   oct_node center_node;
 }world_state;
+
+typedef struct{
+  entity_type type;
+  oct_node node;
+  i64 hash;
+}hash_node;

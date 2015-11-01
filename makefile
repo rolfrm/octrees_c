@@ -1,5 +1,5 @@
 OPT = -g1 -O4
-SOURCES =  voxblit.c ../iron/linmath.c ../iron/utils.c ../iron/mem.c ../iron/fileio.c ../iron/array.c ../iron/math.c ../iron/time.c ../iron/hashtable.c ../iron/log.c vec3i.c octree.c event.c renderer.c sdl_event.c image.c game_state.c dod_octree.c h2o_game_editor.c # oct_node.c
+SOURCES =  voxblit.c ../iron/linmath.c ../iron/utils.c ../iron/mem.c ../iron/fileio.c ../iron/array.c ../iron/math.c ../iron/time.c ../iron/hashtable.c ../iron/log.c vec3i.c octree.c event.c renderer.c sdl_event.c image.c game_state.c dod_octree.c h2o_game_editor.c xxhash.c # oct_node.c
 CC = gcc
 TARGET = run.exe
 OBJECTS =$(SOURCES:.c=.o)

@@ -11,6 +11,7 @@
 #include "renderer.h"
 #include "image.h"
 #include "game_editor.h"
+#include "xxhash.h"
 
 void _error(const char * file, int line, const char * str, ...){
   loge("** ERROR at %s:%i **\n",file,line);
@@ -51,9 +52,32 @@ typedef struct{
   hash_table * loaded_nodes;
   hash_table * enemies;
   game_controller_state controller;
+  oct_node hashed_node;
 }game_data;
 
-
+i64 get_hash(oct_node n, oct_node bn){
+  i64 _get_hash(oct_node n2, bool * ok){ // n2.
+    entity_lst * pl = oct_get_payload(n2);
+    for(size_t i = 0; i < pl->cnt; i++){
+      if(pl->entity[i].type == HASH64){
+	*ok = true;
+	return ((hash_node *) pl->entity[i]).hash;
+      } 
+    }
+    n2 = oct_get_super(n2);
+    i64 h2 = _get_hash(n2, ok) + oct_index(n2);
+    h2 = iron_hash(&h2, sizeof(h2));
+    return h2;
+  }
+  bool ok = false;
+  i64 hash = _get_hash(n, &ok);
+  if(ok)
+    return hash;
+  while(!oct_node_null(bn)){
+    
+  }
+  
+}
 void game_data_add_tile(game_data * gd, texture_asset * texasset){
   int old_cnt = gd->tiles_cnt++;
   gd->tiles = ralloc(gd->tiles, gd->tiles_cnt * sizeof(texture_asset *));
@@ -89,6 +113,13 @@ enum{
 
 // lod_offset: how much above nominal LOD this node is. 
 void load_node(oct_node node, game_data * game_data, int lod_offset){
+  entity_list * lst = oct_get_payload(node);
+  hash_node * hn = NULL;
+  for(size_t i = 0; i < lst->cnt; i++){
+    if(lst->entity[i].type == HASH64)
+      hn = (hash_node *) lst->entity[i];
+  }
+  srand(hn->hash);
   if(ht_lookup(game_data->loaded_nodes, &node))
     return;
   //logd("Loading node.. %i\n", node);
@@ -125,6 +156,10 @@ void load_node(oct_node node, game_data * game_data, int lod_offset){
 
 game_data * load_game_data(game_renderer * rnd2){
   game_data * gd = alloc0(sizeof(game_data));
+  //i64 hashed_node;
+  //i64 node_id;
+  gd->node_id = 0;
+  gd->hashed_node = 0;
 
   texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile62.png");
   texture_asset * tile25 = renderer_load_texture(rnd2, "../racket_octree/tile72.png");
@@ -278,13 +313,28 @@ void update_ai(entity_header * eh, game_data * gd){
 }
 
 static vec3i inv_iso(vec2 p, int y){
-  
   return (vec3i){(p.x + p.y * 2 + 1) / 2,  y,  -(p.y * 2 - p.x + 1) / 2};
 }
+
+__thread XXH64_state_t hashstate;
+
+i64 iron_hash(void * data, u64 len){
+  XXH64_reset(&hashstate, 0);
+  XXH64_update(&hashstate, data, len);
+  i64 h = (i64)XXH64_digest(&hashstate);
+
+  return h;
+}
+
 
 void oct_print(oct_node node);
 void oct_defragment(oct_node oc);
 int main(){
+  i64 d1 = 5, d2 = 6, d3 = 5;
+  i64 hd1 = (i64)iron_hash(&d1, sizeof(d1));
+  i64 hd2 = (i64)iron_hash(&d2, sizeof(d2));
+  i64 hd3 = (i64)iron_hash(&d3, sizeof(d3));
+  logd("%p=%p   %p=%p   %p=%p\n", d1, hd1, d2, hd2, d3, hd3);
 
   int yoff = 0;
   game_renderer * rnd2 = renderer_load(500, 500, 28);
