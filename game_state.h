@@ -47,8 +47,4 @@ typedef struct _world_state{
   oct_node center_node;
 }world_state;
 
-typedef struct{
-  entity_type type;
-  oct_node node;
-  i64 hash;
-}hash_node;
+

@@ -117,6 +117,10 @@ bool oct_has_sub(oct_node node){
   return node.tree->sub_group[node.item] != -1;
 }
 
+bool oct_has_super(oct_node node){
+  return node.tree->super_group[node.item/8] != -1;
+}
+
 oct_node oct_peek_sub(oct_node node, int idx){
   octree * tree = node.tree;
   i64 sub = tree->sub_group[node.item];

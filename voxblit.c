@@ -55,29 +55,69 @@ typedef struct{
   oct_node hashed_node;
 }game_data;
 
-i64 get_hash(oct_node n, oct_node bn){
-  i64 _get_hash(oct_node n2, bool * ok){ // n2.
-    entity_lst * pl = oct_get_payload(n2);
-    for(size_t i = 0; i < pl->cnt; i++){
-      if(pl->entity[i].type == HASH64){
-	*ok = true;
-	return ((hash_node *) pl->entity[i]).hash;
-      } 
+typedef struct{
+  entity_type type;
+  oct_node node;
+  i64 hash;
+}hash_node;
+
+i64 _get_hash(oct_node n2, bool * ok){ // n2.
+    entity_list * pl = oct_get_payload(n2);
+    if(pl != NULL){
+      for(size_t i = 0; i < pl->cnt; i++){
+	if(pl->entity[i]->type == HASH64){
+	  *ok = true;
+	  return ((hash_node *) pl->entity[i])->hash;
+	} 
+      }
     }
-    n2 = oct_get_super(n2);
-    i64 h2 = _get_hash(n2, ok) + oct_index(n2);
+    i64 index = oct_index(n2);
+    n2 = oct_peek_super(n2);
+    if(oct_node_null(n2))
+      return 0;
+    i64 h2 = _get_hash(n2, ok) + index;
     h2 = iron_hash(&h2, sizeof(h2));
     return h2;
   }
-  bool ok = false;
-  i64 hash = _get_hash(n, &ok);
-  if(ok)
-    return hash;
-  while(!oct_node_null(bn)){
-    
-  }
+
+i64 get_hash(oct_node n, oct_node bn, game_data * gd){
   
+  { // Get hash quick
+    bool ok = false;
+    i64 hash = _get_hash(n, &ok);
+    
+    if(ok){
+      logd("Found: %p\n", hash);
+      return hash;
+    }
+  }
+  { //Hash node not found, build hash tree.
+    bool _ok = false;
+    i64 hash2 = _get_hash(bn, &_ok);
+    logd("init hash: %p\n", hash2);
+    ASSERT(_ok);
+    bool changed = false;
+    while(oct_has_super(bn)){
+      bn = oct_get_super(bn);
+      hash2 = iron_hash(&hash2, sizeof(hash2));
+      logd("next hash: %p\n", hash2);
+      changed = true;
+    }
+    ASSERT(changed);
+    hash_node * new_node = alloc0(sizeof(hash_node));
+    new_node->type = HASH64;
+    new_node->hash = hash2;
+    add_entity(bn, (entity_header *) new_node);
+    gd->hashed_node = bn;
+  }
+  { //now it should be possible to find a hash for n
+    bool ok = false;
+    i64 hash = _get_hash(n, &ok);
+    ASSERT(ok);
+    return hash;
+  }
 }
+
 void game_data_add_tile(game_data * gd, texture_asset * texasset){
   int old_cnt = gd->tiles_cnt++;
   gd->tiles = ralloc(gd->tiles, gd->tiles_cnt * sizeof(texture_asset *));
@@ -113,16 +153,11 @@ enum{
 
 // lod_offset: how much above nominal LOD this node is. 
 void load_node(oct_node node, game_data * game_data, int lod_offset){
-  entity_list * lst = oct_get_payload(node);
-  hash_node * hn = NULL;
-  for(size_t i = 0; i < lst->cnt; i++){
-    if(lst->entity[i].type == HASH64)
-      hn = (hash_node *) lst->entity[i];
-  }
-  srand(hn->hash);
+  i64 hash = get_hash(node, game_data->hashed_node, game_data);
+  srand(hash);
   if(ht_lookup(game_data->loaded_nodes, &node))
     return;
-  //logd("Loading node.. %i\n", node);
+  logd("Loading node.. %i %p\n", node, hash);
   int val = 0;
   ht_insert(game_data->loaded_nodes, &node, &val);
   int size = 1;
@@ -156,10 +191,6 @@ void load_node(oct_node node, game_data * game_data, int lod_offset){
 
 game_data * load_game_data(game_renderer * rnd2){
   game_data * gd = alloc0(sizeof(game_data));
-  //i64 hashed_node;
-  //i64 node_id;
-  gd->node_id = 0;
-  gd->hashed_node = 0;
 
   texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile62.png");
   texture_asset * tile25 = renderer_load_texture(rnd2, "../racket_octree/tile72.png");
@@ -343,6 +374,12 @@ int main(){
   world_state state = { n1 };
   game_data * gd = load_game_data(rnd2);
   game_editor ed = start_game_editor(&state);
+  gd->hashed_node = n1;
+  hash_node * hn = alloc0(sizeof(hash_node));
+  hn->hash = 0xf1423f12a131;
+  hn->type = HASH64;
+  add_entity(n1, (entity_header *) hn);
+  
   UNUSED(ed);
   entity * n = insert_entity(n1, vec3mk(1, -4, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
   entity * n_2 = insert_entity(n1, vec3mk(1, -3, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
@@ -393,7 +430,6 @@ int main(){
       oct_node node1;
       entity_list * payload;
     entity_list * lst;
-    logd("EVENT %i\n", i);
       switch(evt[i].type){
       case QUIT:
 	return 0;
