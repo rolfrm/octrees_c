@@ -113,6 +113,7 @@ i64 get_hash(oct_node n, oct_node bn, game_data * gd){
   { //now it should be possible to find a hash for n
     bool ok = false;
     i64 hash = _get_hash(n, &ok);
+    logd("Final: %p\n", hash);
     ASSERT(ok);
     return hash;
   }
@@ -153,11 +154,12 @@ enum{
 
 // lod_offset: how much above nominal LOD this node is. 
 void load_node(oct_node node, game_data * game_data, int lod_offset){
-  i64 hash = get_hash(node, game_data->hashed_node, game_data);
-  srand(hash);
   if(ht_lookup(game_data->loaded_nodes, &node))
     return;
-  logd("Loading node.. %i %p\n", node, hash);
+  i64 hash = get_hash(node, game_data->hashed_node, game_data);
+  srand(hash);
+  logd("%p ", hash);
+  logd("Loading node.. %i %p\n", node.ptr2, hash);
   int val = 0;
   ht_insert(game_data->loaded_nodes, &node, &val);
   int size = 1;
@@ -352,11 +354,8 @@ __thread XXH64_state_t hashstate;
 i64 iron_hash(void * data, u64 len){
   XXH64_reset(&hashstate, 0);
   XXH64_update(&hashstate, data, len);
-  i64 h = (i64)XXH64_digest(&hashstate);
-
-  return h;
+  return (i64)XXH64_digest(&hashstate);
 }
-
 
 void oct_print(oct_node node);
 void oct_defragment(oct_node oc);
@@ -407,10 +406,9 @@ int main(){
     vec3 offset = oct_node_offset(n_2->node, orig->node);
     //logd("Offset: "); vec3_print(offset);vec3_print(n->offset);logd("\n");
     oct_node super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, (int)-offset.y, 0}), 4);
-    for(int i = -4; i <= 4; i++)
-      for(int j = -4; j <= 4; j++){
+    for(int i = -1; i <= 1; i++)
+      for(int j = -1; j <= 1; j++){
 	oct_node r = oct_get_relative(super_1, (vec3i){i, 0, j});
-	UNUSED(r);
 	load_node(r, gd, 4);
       }
     super_1 = oct_get_nth_super(oct_get_relative(n->node, (vec3i){0, 0, 0}), 4);
