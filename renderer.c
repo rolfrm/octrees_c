@@ -78,18 +78,18 @@ void renderer_render(game_renderer * rnd, world_state * state){
       if(payload->type == OBJECT){
 	//logd("rendering object..\n");
 	offset = vec3_add(offset, vec3_scale(((entity *) payload)->offset, s));
-	asset = ((entity *) payload)->texture;
+	//asset = ((entity *) payload)->texture;
       }else if(payload->type == TILE){
 	//logd("Rendering tile..\n");
-	asset = ((tile *) payload)->asset;
+	//asset = ((tile *) payload)->asset;
 
       }else if(payload->type == SATELITE){
-	asset = ((satelite *) payload)->origin->texture;
+	//asset = ((satelite *) payload)->origin->texture;
 	offset = vec3_add(offset, vec3_scale(((satelite *) payload)->offset, s));
 	continue;
       }
       if(asset == NULL){
-	logd("Continuing..\n");
+	//logd("Continuing..\n");
 	continue;
       }
       vec2 point = vec2_add(iso_offset(offset), asset->offset);

@@ -25,7 +25,7 @@ typedef struct {
 typedef struct {
   entity_type type;
   oct_node node;
-  texture_asset * asset;
+  i32 entity_id;
 }tile;
 
 typedef struct {
@@ -38,7 +38,7 @@ void remove_entity(entity_header * eh);
 struct _entity{
   entity_type type;
   oct_node node;
-  texture_asset * texture;
+  i32 entity_id;
   vec3 offset;
   vec3 size;
 };

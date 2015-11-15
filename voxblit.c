@@ -21,17 +21,17 @@ void _error(const char * file, int line, const char * str, ...){
   raise(SIGINT);
 }
 
-tile * insert_tile(oct_node oc, vec3i pos, texture_asset * asset){
+tile * insert_tile(oct_node oc, vec3i pos, i32 id){
   oc = oct_get_relative(oc, pos);
-  tile t = {TILE, oct_node_empty, asset};
+  tile t = {TILE, oct_node_empty, id};
   tile * t2 = clone(&t, sizeof(t));
   add_entity(oc, (entity_header *) t2);
   return t2;
 }
 
-entity * insert_entity(oct_node oc, vec3 pos, vec3 size, texture_asset * asset){
+entity * insert_entity(oct_node oc, vec3 pos, vec3 size, i32 id){
   oc = oct_find_fitting_node(oc, &pos, &size);
-  entity e = {OBJECT, oct_node_empty, asset, pos, size};
+  entity e = {OBJECT, oct_node_empty, id, pos, size};
   entity * e2 = clone(&e, sizeof(entity));
   add_entity(oc, (entity_header *) e2);
   return e2;
@@ -169,32 +169,32 @@ void load_node(oct_node node, game_data * game_data, int lod_offset){
   }
   for(int i = 0; i < size; i++)
     for(int j = 0; j < size; j++){
-      insert_tile(node, vec3i_make(i, 0, j), game_data->tiles[rand()&1]);
+      insert_tile(node, vec3i_make(i, 0, j), rand()&1);
       if(rand() % 16 == 0){
-	insert_tile(node, vec3i_make(i, 1, j), game_data->tiles[GD_TREE_1]);
-	insert_tile(node, vec3i_make(i, 2, j), game_data->tiles[GD_TREE_2]);
-	insert_tile(node, vec3i_make(i, 3, j), game_data->tiles[GD_TREE_3]);
+	insert_tile(node, vec3i_make(i, 1, j), GD_TREE_1);
+	insert_tile(node, vec3i_make(i, 2, j), GD_TREE_2);
+	insert_tile(node, vec3i_make(i, 3, j), GD_TREE_3);
 	for(int k1 = -1; k1 <= 1; k1++)
 	  for(int k2 = -1; k2 <= 1; k2++)
-	    insert_tile(node, vec3i_make(i + k1, 4, j + k2), game_data->tiles[GD_FOILAGE]);
-	insert_tile(node, vec3i_make(i, 5, j), game_data->tiles[GD_FOILAGE]);
+	    insert_tile(node, vec3i_make(i + k1, 4, j + k2), GD_FOILAGE);
+	insert_tile(node, vec3i_make(i, 5, j), GD_FOILAGE);
       }else if(rand() % 4000 == 0){
-	insert_entity(node, vec3mk(i, 1, j), vec3mk(1, 1, 1), game_data->sprites[GD_FIREPLACE]);
+	insert_entity(node, vec3mk(i, 1, j), vec3mk(1, 1, 1), GD_FIREPLACE);
       
       }else if(rand() % 2000 == 0){
 	entity * n2 = insert_entity(node, vec3mk(i, 1, j), 
 				    vec3mk(1, 1, 1), 
-				    game_data->sprites[(rand() & 1) == 0 ? GD_BUG : GD_CAT]);
+				    (rand() & 1) == 0 ? GD_BUG : GD_CAT);
 	int unused_1;
 	ht_insert(game_data->enemies, &n2, &unused_1);
       }
     }
 }
 
-game_data * load_game_data(game_renderer * rnd2){
+game_data * load_game_data(){
   game_data * gd = alloc0(sizeof(game_data));
 
-  texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile62.png");
+  /*texture_asset * tile22 = renderer_load_texture(rnd2, "../racket_octree/tile62.png");
   texture_asset * tile25 = renderer_load_texture(rnd2, "../racket_octree/tile72.png");
   texture_asset * tile3 = renderer_load_texture(rnd2, "../racket_octree/tile2x2.png");
   texture_asset * tile1 = renderer_load_texture(rnd2, "../racket_octree/tile1.png");
@@ -247,7 +247,7 @@ game_data * load_game_data(game_renderer * rnd2){
   game_data_add_sprite(gd, fireplace);
   game_data_add_sprite(gd, buggy);
   game_data_add_sprite(gd, cat);
-  game_data_add_sprite(gd, select_cube);
+  game_data_add_sprite(gd, select_cube);*/
   gd->loaded_nodes = ht_create(1024, sizeof(oct_node), 4);
   gd->enemies = ht_create(1024, 8, 4);
   return gd;
@@ -367,11 +367,11 @@ int main(){
   logd("%p=%p   %p=%p   %p=%p\n", d1, hd1, d2, hd2, d3, hd3);
 
   int yoff = 0;
-  game_renderer * rnd2 = renderer_load(500, 500, 28);
+  //game_renderer * rnd2 = renderer_load(500, 500, 28);
   oct_node n1 = oct_create();
 
   world_state state = { n1 };
-  game_data * gd = load_game_data(rnd2);
+  game_data * gd = load_game_data();
   game_editor ed = start_game_editor(&state);
   gd->hashed_node = n1;
   hash_node * hn = alloc0(sizeof(hash_node));
@@ -380,20 +380,20 @@ int main(){
   add_entity(n1, (entity_header *) hn);
   
   UNUSED(ed);
-  entity * n = insert_entity(n1, vec3mk(1, -4, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
-  entity * n_2 = insert_entity(n1, vec3mk(1, -3, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY_UPPER]);
-  entity * n_3 = insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
+  entity * n = insert_entity(n1, vec3mk(1, -4, 0), vec3mk(1, 1, 1), GD_GUY);
+  entity * n_2 = insert_entity(n1, vec3mk(1, -3, 0), vec3mk(1, 1, 1), GD_GUY_UPPER);
+  entity * n_3 = insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), GD_GUY);
   //insert_entity(n1, vec3mk(0, 0, 0), vec3mk(1, 1, 1), gd->sprites[GD_GUY]);
-  tile * orig = insert_tile(n1, vec3i_make(0, 0, 0), gd->tiles[GD_TREE_1]);
-  //entity * ne = insert_entity(n1, vec3mk(-5, -4, -5), vec3mk(1, 1, 1), gd->sprites[GD_BUG]);
+  tile * orig = insert_tile(n1, vec3i_make(0, 0, 0), GD_TREE_1);
+  //entity * ne = insert_entity(n1, vec3mk(-5, -4, -5), vec3mk(1, 1, 1), GD_BUG);
   
-  entity * select_cube = insert_entity(n1, vec3mk(-2, -8, -4), vec3mk(1, 1, 1), gd->sprites[GD_SELECT_CUBE]);
+  entity * select_cube = insert_entity(n1, vec3mk(-2, -8, -4), vec3mk(1, 1, 1), GD_SELECT_CUBE);
   int unused_1;
   //ht_insert(gd->enemies, &ne, &unused_1);
   ht_insert(gd->enemies, &n_3, &unused_1);
   while(true){
     //logd("I: %i\n", i);
-    vec2i p = renderer_get_mouse_position(rnd2);
+    vec2i p = {0, 0 }; //renderer_get_mouse_position(rnd2);
     vec2 p2 = vec2mk(p.x / 28.0, (p.y - 40) / 28.0 );
     vec3i p3 =inv_iso(p2, yoff);
     select_cube->offset = vec3i_to_vec3(p3);
@@ -419,7 +419,7 @@ int main(){
 	update_entity_positions(r);
       }
     UNUSED(state);
-    renderer_render(rnd2, &state);
+    //renderer_render(rnd2, &state);
     event evt[32];
     u32 event_cnt = renderer_read_events(evt, array_count(evt));
     gd->controller = renderer_game_controller();
@@ -444,7 +444,7 @@ int main(){
 	  remove_entity((entity_header *)select_cube);
 	  payload = oct_get_payload(node1);
 	  if(payload == NULL){
-	    insert_tile(node1, (vec3i){0, 0, 0}, gd->tiles[rand()&1]);
+	    insert_tile(node1, (vec3i){0, 0, 0}, rand()&1);
 	  }else{
 	    while((lst = oct_get_payload(node1)))
 	      remove_entity(lst->entity[0]);

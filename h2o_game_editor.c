@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <iron/types.h>
 #include <iron/utils.h>
 #include <iron/log.h>
 #include <iron/fileio.h>
@@ -67,11 +69,16 @@ int game_editor_main(void * _ed, struct MHD_Connection * con, const char * url,
       int * tiles = alloc0(x * y * z * sizeof(int));
       void _cb(oct_node node, vec3 p, vec3 s){
 	UNUSED(node);
-	if(s.x == size.x && oct_get_payload(node) != NULL){
+	entity_list * lst = oct_get_payload(node);
+	if(s.x == size.x && lst && lst->cnt > 0){
 	  int _x =  -(int)p.x;
 	  int _y =  -(int)p.y;
 	  int _z =  -(int)p.z;
-	  tiles[_x + x*_y + x*y*_z] = 1;
+	  entity_header * ent = lst->entity[0];
+	  if(ent->type == OBJECT)
+	    tiles[_x + x*_y + x*y*_z] = ((entity *)ent)->entity_id;
+	  if(ent->type == TILE)
+	    tiles[_x + x*_y + x*y*_z] = ((tile *)ent)->entity_id;
 	}
       }
       UNUSED(_cb); UNUSED(pos);
